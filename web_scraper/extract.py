@@ -33,13 +33,16 @@ def load_all_data(conn: extensions.connection) -> set:
                     JOIN page_scrape ON
                     url.url_id = page_scrape.url_id""")
         urls = cur.fetchall()
+
+        if len(urls) == 0:
+            raise ValueError("No urls were found!")
         url_list = [url[0] for url in urls]
         return convert_to_set(url_list)
     
 
 def convert_to_set(urls: list[str]) -> set:
     """Turns the list into a set to remove duplicate entries."""
-
+    
     return set(urls)
 
 
