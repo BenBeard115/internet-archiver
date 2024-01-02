@@ -20,7 +20,33 @@ def get_connection():
         raise error
 
 
-def add_website(conn, url_id, at, html, css):
+def add_url(conn, response_data):
+    search_query = sql.SQL("SELECT {field} FROM {table} WHERE {pkey} = %s").format(
+        field=sql.Identifier('url_id'),
+        table=sql.Identifier('url'),
+        pkey=sql.Identifier('url'))
+
+    with conn.cursor() as cur:
+        cur.execute(search_query, (response_data["url"],))
+        url_id = cur.fetchone()
+        if not url_id:
+            insert_query = sql.SQL("""
+                    INSERT INTO {table} 
+                        ({field})
+                    VALUES
+                        ({value});""").format(
+                table=sql.Identifier('url'),
+                field=sql.Identifier('url'),
+                value=sql.Literal(response_data["url"])
+            )
+            cur.execute(insert_query)
+            cur.execute(search_query, (response_data["url"],))
+            url_id = cur.fetchone()
+
+        return url_id[0]
+
+
+def add_website(conn, response_data):
     query = sql.SQL("""
                     INSERT INTO {table} 
                         ({fields})
@@ -34,10 +60,10 @@ def add_website(conn, url_id, at, html, css):
             sql.Identifier('css')
         ]),
         values=sql.SQL(',').join([
-            sql.Literal(url_id),
-            sql.Literal(at),
-            sql.Literal(html),
-            sql.Literal(css)
+            sql.Literal(response_data["url_id"]),
+            sql.Literal(response_data["timestamp"]),
+            sql.Literal(response_data["html_filename"]),
+            sql.Literal(response_data["css_filename"])
         ])
     )
 
@@ -62,11 +88,14 @@ def print_page_scrape(conn):
 if __name__ == "__main__":
     connection = get_connection()
 
-    url_id = 2
-    at = datetime(2020, 6, 22, 19, 10, 20)
-    html = 'FAKER_HTML'
-    css = 'FAKER_CSS'
+    response_data = {
+        'url': "https://www.google.co.uk",
+        'html_filename': 'FAKER_HTML',
+        'css_filename': 'FAKER_CSS',
+        'timestamp': datetime(2020, 6, 22, 19, 10, 20)
+    }
 
-    add_website(connection, url_id, at, html, css)
+    print(add_url(connection, response_data))
+    # add_website(connection, response_data)
 
-    print_page_scrape(connection)
+    # print_page_scrape(connection)
