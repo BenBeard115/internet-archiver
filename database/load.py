@@ -3,11 +3,11 @@ from os import environ
 from datetime import datetime
 
 from dotenv import load_dotenv
-from psycopg2 import connect, sql, DatabaseError, OperationalError
+from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
 
 
-def get_connection():
-    load_dotenv()
+def get_connection() -> extensions.connection:
+    """Connects to the postgres database hosted on aws RDS."""
     try:
         conn = connect(user=environ["DB_USERNAME"],
                        dbname=environ["DB_NAME"],
@@ -20,7 +20,9 @@ def get_connection():
         raise error
 
 
-def add_url(conn, response_data):
+def add_url(conn: extensions.connection, response_data: dict) -> None:
+    """Adds a website's url to the database and extracts the url_id."""
+    # query to search for the corresponding url_id
     search_query = sql.SQL("SELECT {field} FROM {table} WHERE {pkey} = %s").format(
         field=sql.Identifier('url_id'),
         table=sql.Identifier('url'),
@@ -29,7 +31,9 @@ def add_url(conn, response_data):
     with conn.cursor() as cur:
         cur.execute(search_query, (response_data["url"],))
         url_id = cur.fetchone()
+        # checking if site has been archived before
         if not url_id:
+            # inserting url to url table
             insert_query = sql.SQL("""
                     INSERT INTO {table} 
                         ({field})
@@ -43,10 +47,13 @@ def add_url(conn, response_data):
             cur.execute(search_query, (response_data["url"],))
             url_id = cur.fetchone()
 
-        return url_id[0]
+        # adding the url_id to the response dictionary
+        response_data["url_id"] = url_id[0]
+        conn.commit()
 
 
-def add_website(conn, response_data):
+def add_website(conn: extensions.connection, response_data: dict) -> None:
+    """Adds a website's data to the database."""
     query = sql.SQL("""
                     INSERT INTO {table} 
                         ({fields})
@@ -68,34 +75,20 @@ def add_website(conn, response_data):
     )
 
     with conn.cursor() as cur:
-
         cur.execute(query)
-
-        cur.execute("SELECT * FROM page_scrape;")
-        print(cur.fetchall())
-
-
-def print_page_scrape(conn):
-    query = sql.SQL("SELECT * FROM {table};").format(
-        table=sql.Identifier('page_scrape'))
-
-    with conn.cursor() as cur:
-        cur.execute(query)
-        rows = cur.fetchall()
-        print(rows)
+        conn.commit()
 
 
 if __name__ == "__main__":
+    load_dotenv()
     connection = get_connection()
 
-    response_data = {
-        'url': "https://www.google.co.uk",
+    example_response_data = {
+        'url': "https://www.example.co.uk",
         'html_filename': 'FAKER_HTML',
         'css_filename': 'FAKER_CSS',
         'timestamp': datetime(2020, 6, 22, 19, 10, 20)
     }
 
-    print(add_url(connection, response_data))
-    # add_website(connection, response_data)
-
-    # print_page_scrape(connection)
+    print(add_url(connection, example_response_data))
+    add_website(connection, example_response_data)
