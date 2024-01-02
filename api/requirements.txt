@@ -1,3 +1,7 @@
 flask
 bs4
 requests
+python-dotenv
+boto3
+pytest
+pylint
