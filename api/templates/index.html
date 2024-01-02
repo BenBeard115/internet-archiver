@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Internet Archiver</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+</head>
+
+<body>
+
+    <div class="header-wrapper">
+        <h1>📜 The Internet Archiver</h1>
+    </div>
+
+    <div>
+        <p>The Internet Archiver empowers you to preserve your favourite web pages for future generations.
+            <br>
+            Simply submit a URL, and we'll capture and store the webpage's HTML and CSS, keeping a record of
+            its content and styling.
+            <br>
+            The Internet Archiver automatically scrapes your webpage at a frequency of your choice, allowing you
+            to keep track the evolution of its content.
+        </p>
+    </div>
+
+
+    <form action="/save" method="post">
+        <label for="url">Enter URL:</label>
+        <input type="text" id="url" name="url" required>
+        <button type="submit">Save</button>
+    </form>
+</body>
+
+</html>
