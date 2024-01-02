@@ -1,3 +1,12 @@
+.env
+.terraform
+*.csv
+*.json
+venv
+__pytest_cache__
+.coverage
+.DS_Store
+__pycache__/
 terraform/terraform.tfvars
 terraform/.terraform
 terraform/terraform.tfstate
