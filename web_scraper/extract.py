@@ -38,11 +38,11 @@ def load_all_data(conn: extensions.connection) -> set:
             raise ValueError("No urls were found!")
         url_list = [url[0] for url in urls]
         return convert_to_set(url_list)
-    
+
 
 def convert_to_set(urls: list[str]) -> set:
     """Turns the list into a set to remove duplicate entries."""
-    
+
     return set(urls)
 
 
@@ -84,7 +84,7 @@ def scrape_all_urls(urls: set) -> None:
 
 
 if __name__ == "__main__":
-    
+
     load_dotenv()
 
     startup = perf_counter()
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     connection = get_database_connection()
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
-    
+
     scraper = perf_counter()
     print("Scraping websites...")
     scrape_all_urls(list_of_urls)
