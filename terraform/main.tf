@@ -64,3 +64,93 @@ resource "aws_ecs_task_definition" "internet-archiver-rds-taskdef" {
     cpu = 1024
 }
 
+
+# create a role for the EventBridge schedule
+resource "aws_iam_role" "schedule-role" {
+    name = "c9-internet-archiver-schedule-role"
+    assume_role_policy = jsonencode({
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Principal": {
+                    "Service": "scheduler.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole",
+                "Condition": {
+                    "StringEquals": {
+                        "aws:SourceAccount": "129033205317"
+                    }
+                }
+            }
+        ]
+    })
+}
+
+# create policy for the schedule role
+resource "aws_iam_policy" "schedule-policy" {
+    name        = "c9-internet-archiver-terraform-schedule-policy"
+    policy = jsonencode({
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Effect": "Allow",
+                "Action": [
+                    "ecs:RunTask",
+                    "states:StartExecution"
+                ],
+                "Resource": [
+                    "${aws_ecs_task_definition.EXAMPLE-TASK-DEF-NAME.arn}"
+                ],
+                "Condition": {
+                    "ArnLike": {
+                        "ecs:cluster": "${data.aws_ecs_cluster.c9-cluster.arn}"
+                    }
+                }
+            },
+            {
+                "Effect": "Allow",
+                "Action": "iam:PassRole",
+                "Resource": [
+                    "*"
+                ],
+                "Condition": {
+                    "StringLike": {
+                        "iam:PassedToService": "ecs-tasks.amazonaws.com"
+                    }
+                }
+            }
+        ]
+    })
+}
+
+# attach policy to schedule role
+resource "aws_iam_policy_attachment" "schedule-policy-attachment" {
+    name = "c9-internet-archiver-schedule-policy-attachment"
+    roles = [aws_iam_role.schedule-role.name]
+    policy_arn = aws_iam_policy.schedule-policy.arn
+}
+
+# create EventBridge schedule for web scraper script
+resource "aws_scheduler_schedule" "internet-archiver-scraper-schedule" {
+    name       = "c9-internet-archiver-scraper-schedule"
+    schedule_expression = "cron(0 9-18/3 * * ? *)"
+    flexible_time_window {
+        mode = "OFF"
+    }
+    target {
+        arn      = data.aws_ecs_cluster.c9-cluster.arn
+        role_arn = aws_iam_role.schedule-role.arn
+        ecs_parameters {
+          task_definition_arn = aws_ecs_task_definition.EXAMPLE-TASK-DEF-NAME.arn
+          task_count = 1
+          launch_type = "FARGATE"
+          platform_version = "LATEST"
+          network_configuration {
+            subnets = [ "subnet-0d0b16e76e68cf51b", "subnet-081c7c419697dec52", "subnet-02a00c7be52b00368" ]
+            security_groups = [ "sg-020697b6514174b72" ]
+            assign_public_ip = true
+          }
+        }
+    }
+}
