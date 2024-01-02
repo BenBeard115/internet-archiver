@@ -1,0 +1,1 @@
+psql scraper -f schema.sql
