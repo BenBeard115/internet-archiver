@@ -20,12 +20,7 @@ def get_connection():
         raise error
 
 
-def add_website(conn):
-    url_id = 2
-    at = datetime(2020, 6, 22, 19, 10, 20)
-    html = 'FAKER_HTML'
-    css = 'FAKER_CSS'
-
+def add_website(conn, url_id, at, html, css):
     query = sql.SQL("""
                     INSERT INTO {table} 
                         ({fields})
@@ -66,5 +61,12 @@ def print_page_scrape(conn):
 
 if __name__ == "__main__":
     connection = get_connection()
-    # add_website(connection)
+
+    url_id = 2
+    at = datetime(2020, 6, 22, 19, 10, 20)
+    html = 'FAKER_HTML'
+    css = 'FAKER_CSS'
+
+    add_website(connection, url_id, at, html, css)
+
     print_page_scrape(connection)
