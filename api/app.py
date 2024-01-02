@@ -49,6 +49,13 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/save/index.html')
+def save_index():
+    """Saving new website URL page."""
+
+    return render_template('save/index.html')
+
+
 @app.route('/save', methods=['POST'])
 def save():
     """Allows user to input URL and save HTML and CSS."""

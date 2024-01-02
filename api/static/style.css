@@ -1,0 +1,24 @@
+.title {
+  margin-left: 1rem;
+}
+
+body {
+  background: #bdddb2;
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+
+main {
+  background: #e5f0e1;
+  padding: 1rem 3rem 2rem;
+  margin: 2rem auto;
+  box-shadow: rgba(0, 0, 0, 0.05) -2px -2px 4px;
+}
+
+header {
+  background: #e5f0e1;
+  padding: 1rem 3rem 1rem;
+  margin: 2rem auto;
+  box-shadow: rgba(0, 0, 0, 0.05) -2px -2px 4px;
+}
+
