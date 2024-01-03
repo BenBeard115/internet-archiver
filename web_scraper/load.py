@@ -21,7 +21,7 @@ def sanitise_filename(filename: str) -> str:
 
 def extract_title(url: str) -> str:
     """Extracts title used for s3_filename from given url."""
-
+    
     page = urlopen(url)
     soup = BeautifulSoup(page, 'html.parser')
     title = soup.title.text.strip()

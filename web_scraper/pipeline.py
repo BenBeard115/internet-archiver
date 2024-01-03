@@ -31,7 +31,7 @@ if __name__ == "__main__":
     s3_client = client('s3',
                        aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
                        aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
-    print(f"Connected to S3 --- {connecting_time - perf_counter()}s.")
+    print(f"Connected to S3 --- {perf_counter() - connecting_time}s.")
 
     download = perf_counter()
     print("Uploading HTML and CSS data to S3...")
@@ -43,5 +43,5 @@ if __name__ == "__main__":
 
     shutil.rmtree("static/")
 
-    print(f"Data uploaded --- {download - perf_counter()}s.")
-    print(f"Pipeline complete --- {startup - perf_counter()}s.")
+    print(f"Data uploaded --- {perf_counter() - download}s.")
+    print(f"Pipeline complete --- {perf_counter() - startup}s.")
