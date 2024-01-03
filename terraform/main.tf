@@ -183,7 +183,7 @@ resource "aws_security_group" "c9-internet-archiver-database-sg" {
 resource "aws_db_instance" "c9_internet_archiver_database" {
   allocated_storage             = 10
   db_name                       = "c9_internet_archiver_database"
-  identifier                    = "c9-internet-archiver-terraform"
+  identifier                    = "c9-internet-archiver"
   engine                        = "postgres"
   engine_version                = "15.3"
   instance_class                = "db.t3.micro"

@@ -21,11 +21,14 @@ def sanitise_filename(filename: str) -> str:
 
 def extract_title(url: str) -> str:
     """Extracts title used for s3_filename from given url."""
-    
-    page = urlopen(url)
-    soup = BeautifulSoup(page, 'html.parser')
-    title = soup.title.text.strip()
 
+    try:
+        page = urlopen(url)
+        soup = BeautifulSoup(page, 'html.parser')
+        title = soup.title.text.strip()
+    except ex:
+        return None
+    
     return sanitise_filename(title)
 
 
@@ -47,25 +50,25 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
         print('Unable to upload file. Please check details!')
 
 
-def upload_to_s3(s3_client: client, url: str, html_filename_temp: str, css_filename_temp: str):
+def upload_to_s3(s3_client: client, url: str, html_filename_temp: str, css_filename_temp: str) -> None:
     """Uploads HTML and CSS to S3 bucket."""
 
     title = extract_title(url)
-    url_domain = extract_domain(url)
-    timestamp = datetime.utcnow().isoformat()
 
-    html_file_to_upload = f'static/{html_filename_temp}'
-    css_file_to_upload = f'static/{css_filename_temp}'
+    if title:
+        url_domain = extract_domain(url)
+        timestamp = datetime.utcnow().isoformat()
 
-    s3_object_key_html = f'{url_domain}/{title}/{timestamp}.html'
-    s3_object_key_css = f'{url_domain}/{title}/{timestamp}.css'
+        html_file_to_upload = f'static/{html_filename_temp}'
+        css_file_to_upload = f'static/{css_filename_temp}'
 
-    upload_file_to_s3(s3_client, html_file_to_upload,
-                      environ['S3_BUCKET'], s3_object_key_html)
-    upload_file_to_s3(s3_client, css_file_to_upload,
-                      environ['S3_BUCKET'], s3_object_key_css)
+        s3_object_key_html = f'{url_domain}/{title}/{timestamp}.html'
+        s3_object_key_css = f'{url_domain}/{title}/{timestamp}.css'
 
-    return s3_object_key_html, s3_object_key_css
+        upload_file_to_s3(s3_client, html_file_to_upload,
+                        environ['S3_BUCKET'], s3_object_key_html)
+        upload_file_to_s3(s3_client, css_file_to_upload,
+                        environ['S3_BUCKET'], s3_object_key_css)
 
 
 def save_html_css(url: str) -> str:
