@@ -26,7 +26,7 @@ def extract_title(url: str) -> str:
         page = urlopen(url)
         soup = BeautifulSoup(page, 'html.parser')
         title = soup.title.text.strip()
-    except ex:
+    except Exception:
         return None
     
     return sanitise_filename(title)
