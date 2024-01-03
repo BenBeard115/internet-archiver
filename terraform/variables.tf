@@ -42,3 +42,15 @@ variable "URL_TABLE_NAME" {
 variable "SCRAPE_TABLE_NAME" {
     type = string
 }
+
+variable "AWS_GROUP" {
+    type = string
+}
+
+variable "AWS_REGION" {
+    type = string
+}
+
+variable "AWS_STREAM_PREFIX" {
+    type = string
+}

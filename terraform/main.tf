@@ -16,7 +16,7 @@ resource "aws_s3_bucket" "internet-archiver-bucket" {
   object_lock_enabled = false
 }
 
-resource "aws_s3_bucket_public_access_block" "plant-bucket-public-access" {
+resource "aws_s3_bucket_public_access_block" "internet-archiver-bucket-public-access" {
   bucket = aws_s3_bucket.internet-archiver-bucket.id
 
   block_public_acls       = true
@@ -63,8 +63,17 @@ resource "aws_ecs_task_definition" "internet-archiver-auto-scraper-taskdef" {
                 { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
                 { name: "URL_TABLE_NAME", value: var.URL_TABLE_NAME },
                 { name: "SCRAPE_TABLE_NAME", value: var.SCRAPE_TABLE_NAME }
-            ]
+            ],
+            "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": var.AWS_GROUP,
+                "awslogs-region": var.AWS_REGION,
+                "awslogs-stream-prefix": var.AWS_STREAM_PREFIX,
+                "awslogs-create-group": "true"
+            }
         }
+    }
     ])
     execution_role_arn = data.aws_iam_role.execution-role.arn
     memory = 2048
