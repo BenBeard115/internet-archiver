@@ -3,7 +3,7 @@
 For some folders there will be a `requirements.txt` file. Once in the folder, you can run the following command:
 - `pip3 install -r requirements.txt`
 
-You will need to create a `.env` in every folder which contains:
+A `.env` is required in every folder containing:
 -DB_NAME
 -DB_IP
 -DB_PORT
@@ -12,6 +12,22 @@ You will need to create a `.env` in every folder which contains:
 -AWS_ACCESS_KEY_ID
 -AWS_SECRET_ACCESS_KEY
 -S3_BUCKET
+
+A `terraform.tfvars` is required in the terraform folder containing:
+-S3_BUCKET
+-DB_IP
+-DB_PORT
+-DB_NAME
+-DB_USERNAME
+-DB_PASSWORD
+-AWS_ACCESS_KEY_ID
+-AWS_SECRET_ACCESS_KEY
+-URL_TABLE_NAME
+-SCRAPE_TABLE_NAME
+-AWS_GROUP
+-AWS_REGION
+-AWS_STREAM_PREFIX
+
 
 ## Files
 ### Api Folder
@@ -28,6 +44,8 @@ You will need to create a `.env` in every folder which contains:
 -`login.sh`: A bash script that logs into the database for debugging purposes.
 
 ### Terraform Folder
+-`main.tf`
+-`variable.tf`
 
 
 ### WebScraper Folder
