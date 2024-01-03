@@ -68,7 +68,6 @@ def download_data_files(s3_client: client, bucket: str, keys: list[str]) -> None
         s3_client.download_file(bucket, k, new_filename)
 
 
-
 if __name__ == "__main__":
 
     s3_client = get_s3_client()
