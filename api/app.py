@@ -21,6 +21,13 @@ from upload_to_s3 import (
     upload_file_to_s3
 )
 
+from upload_to_database import (
+    get_connection,
+    add_url,
+    add_website
+)
+
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -81,6 +88,13 @@ def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
     return s3_object_key_html, s3_object_key_css
 
 
+def upload_to_database(response_data: dict) -> None:
+    """Uploads website information to the database."""
+    connection = get_connection()
+    add_url(connection, response_data)
+    add_website(connection, response_data)
+
+
 @app.route('/')
 def index():
     """Main page of website."""
@@ -115,14 +129,13 @@ def save():
             'timestamp': timestamp
         }
 
+        upload_to_database(response_data)
+
         return jsonify(response_data)
 
     except Exception as e:
         error_response = {'error': str(e)}
         return jsonify(error_response), 500
-
-
-# uploads RDS
 
 
 if __name__ == '__main__':
