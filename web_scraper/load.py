@@ -1,8 +1,10 @@
 """Script used to insert the re-scraped HTML and CSS files into the S3 bucket."""
 
 from datetime import datetime
-from os import environ, remove, path, getcwd, rmdir
+from os import environ, path, getcwd
+from time import perf_counter
 import re
+import shutil
 
 from boto3 import client
 from bs4 import BeautifulSoup
@@ -63,8 +65,6 @@ def upload_to_s3(s3_client: client, url: str, html_filename_temp: str, css_filen
     upload_file_to_s3(s3_client, css_file_to_upload,
                       environ['S3_BUCKET'], s3_object_key_css)
 
-    rmdir("static/")
-
     return s3_object_key_html, s3_object_key_css
 
 
@@ -96,14 +96,23 @@ if __name__ == "__main__":
 
     load_dotenv()
 
+    startup = perf_counter()
+    print("Connecting to S3...")
     s3_client = client('s3',
                        aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
                        aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    print(f"Connected to S3 --- {startup - perf_counter()}s.")
 
     list_of_urls = ["https://www.youtube.co.uk", "https://www.google.co.uk"]
 
+    download = perf_counter()
+    print("Uploading HTML and CSS data to S3...")
     for url in list_of_urls:
 
         html_file_name, css_file_name = save_html_css(url)
         upload_to_s3(s3_client, url,
                      html_file_name, css_file_name)
+
+    shutil.rmtree("static/")
+
+    print(f"Data uploaded --- {download - perf_counter()}s.")
