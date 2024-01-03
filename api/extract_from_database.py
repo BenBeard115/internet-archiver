@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
 
 
-def get_connection() -> extensions.connection:
+def get_connection(environ: environ) -> extensions.connection:
     """Connects to the postgres database hosted on aws RDS."""
     connect_time = perf_counter()
     logging.info("Connecting to database...")
@@ -62,5 +62,5 @@ if __name__ == "__main__":
     load_dotenv()
     logging.getLogger().setLevel(logging.INFO)
 
-    connection = get_connection()
+    connection = get_connection(environ)
     print(extract_data(connection, "https://www.telegraph.co.uk/"))
