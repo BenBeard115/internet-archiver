@@ -85,10 +85,22 @@ def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
 def index():
     """Main page of website."""
 
-    return render_template('index.html')
+    url_links = [
+        {"display": "Passive Loathing",
+         "url": "http://www.lel.ed.ac.uk/~gpullum/passive_loathing.html"},
+        {"display": "Don't make fun of renowned author Dan Brown",
+         "url": "https://www.telegraph.co.uk/books/authors/dont-make-fun-of-renowned-dan-brown/"},
+        {"display": "The Meteor Generation",
+         "url": "https://eveninguniverse.com/fiction/the-meteor-generation.html",
+         "author": "Heather Flowers"},
+    ]  # What if these were loaded from a database of some kind? What then?
+
+    # All variables passed in can be used in the template
+    return render_template("index.html", heading="Home", links=url_links)
 
 
-@app.route('/save/index.html')
+
+@app.route('/save/input')
 def save_index():
     """Saving new website URL page."""
 
