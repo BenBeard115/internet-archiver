@@ -95,6 +95,7 @@ def save_index():
     return render_template('save/index.html')
 
 
+# Redirect to saved template page... with details
 @app.route('/save', methods=['POST'])
 def save():
     """Allows user to input URL and save HTML and CSS."""
