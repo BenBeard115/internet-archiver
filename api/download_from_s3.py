@@ -1,7 +1,7 @@
 """Functions to download HTML and CSS files from S3 bucket."""
 
 from datetime import datetime, timedelta
-from os import environ
+from os import environ, path, makedirs
 
 from boto3 import client
 from dotenv import load_dotenv
@@ -58,6 +58,17 @@ def get_recent_object_keys(s3_client: client, bucket: str, num_files: int = 10) 
     return recent_keys
 
 
+def download_data_files(s3_client: client, bucket: str, keys: list[str]) -> None:
+    """Downloads the most recent files from S3."""
+
+    for k in keys:
+        new_filename = k.replace('/', '-')
+
+        print(f"\nDownloading: {k}")
+        s3_client.download_file(bucket, k, new_filename)
+
+
+
 if __name__ == "__main__":
 
     s3_client = get_s3_client()
@@ -70,8 +81,6 @@ if __name__ == "__main__":
     ikea_html = filter_keys_by_website(keys, 'ikea')
     guardian_html = filter_keys_by_website(keys, 'guardian')
 
-    most_recent_bbc_files = get_object_keys(s3_client, BUCKET, num_files=10)
+    most_recent_files = get_recent_object_keys(s3_client, BUCKET, num_files=10)
 
-    for file in most_recent_bbc_files:
-        print(file)
-
+    download_data_files(s3_client, BUCKET, most_recent_files)
