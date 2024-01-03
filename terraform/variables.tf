@@ -12,7 +12,7 @@ variable "DB_PASSWORD" {
 }
 
 variable "DB_IP" {
-    type = number
+    type = string
 }
 
 variable "S3_BUCKET" {
