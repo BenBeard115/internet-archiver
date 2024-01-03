@@ -154,3 +154,37 @@ resource "aws_scheduler_schedule" "internet-archiver-scraper-schedule" {
         }
     }
 }
+
+
+
+# Creates the security group allowing postgres access
+resource "aws_security_group" "c9-internet-archiver-database-sg" {
+  name        = "c9-internet-archiver-database-sg"
+  description = "Allow inbound postgres traffic"
+  vpc_id      = var.VPC_ID
+
+  ingress {
+    description      = "Postgres access"
+    from_port        = 5432
+    to_port          = 5432
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+
+# Creates the postgres database
+resource "aws_db_instance" "c9_internet_archiver_database" {
+  allocated_storage             = 10
+  db_name                       = "c9_internet_archiver_database"
+  identifier                    = "c9-internet-archiver-terraform"
+  engine                        = "postgres"
+  engine_version                = "15.3"
+  instance_class                = "db.t3.micro"
+  publicly_accessible           = true 
+  performance_insights_enabled  = false
+  skip_final_snapshot           = true
+  db_subnet_group_name          = "public_subnet_group"
+  vpc_security_group_ids        = [aws_security_group.c9-internet-archiver-database-sg.id]
+  username                      = var.DB_USERNAME
+  password                      = var.DB_PASSWORD
+}
