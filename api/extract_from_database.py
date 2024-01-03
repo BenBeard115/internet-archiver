@@ -29,7 +29,7 @@ def get_connection() -> extensions.connection:
 def extract_data(conn: extensions.connection, url: str) -> list[tuple]:
     """Extracts data from the database relating to a specified url."""
     extract_time = perf_counter()
-
+    logging.info("Extracting data...")
     query = sql.SQL("""
                     SELECT {fields}
                     FROM {table_1}
@@ -52,7 +52,7 @@ def extract_data(conn: extensions.connection, url: str) -> list[tuple]:
         cur.execute(query)
         rows = cur.fetchall()
 
-    logging.info("Website Uploaded --- %ss.",
+    logging.info("Data Extracted --- %ss.",
                  round(perf_counter() - extract_time, 3))
 
     return rows
