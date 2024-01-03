@@ -157,7 +157,7 @@ resource "aws_scheduler_schedule" "internet-archiver-scraper-schedule" {
 
 
 
-
+# Creates the security group allowing postgres access
 resource "aws_security_group" "c9-internet-archiver-database-sg" {
   name        = "c9-internet-archiver-database-sg"
   description = "Allow inbound postgres traffic"
@@ -172,9 +172,10 @@ resource "aws_security_group" "c9-internet-archiver-database-sg" {
   }
 }
 
-resource "aws_db_instance" "museum-db" {
+# Creates the postgres database
+resource "aws_db_instance" "c9_internet_archiver_database" {
   allocated_storage             = 10
-  db_name                       = "postgres"
+  db_name                       = "c9_internet_archiver_database"
   identifier                    = "c9-internet-archiver-terraform"
   engine                        = "postgres"
   engine_version                = "15.3"
