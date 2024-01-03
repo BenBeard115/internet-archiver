@@ -49,3 +49,9 @@ A `terraform.tfvars` is required in the terraform folder containing:
 
 
 ### WebScraper Folder
+
+
+## Architecture Diagram
+
+
+## ERD Diagram
