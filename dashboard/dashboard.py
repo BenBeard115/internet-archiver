@@ -1,6 +1,7 @@
 """Script that creates the dashboard for the archiver data"""
 from os import environ
 import logging
+import re
 
 from dotenv import load_dotenv
 import pandas as pd
@@ -15,12 +16,20 @@ def make_clickable(link):
     return f'<a target="_blank" href="{link}">{link}</a>'
 
 
+def make_url_alias(url):
+    regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
+    match = re.search(regex_pattern, url)
+    return match.group(3)
+
+
 if __name__ == "__main__":
     load_dotenv()
     logging.getLogger().setLevel(logging.INFO)
 
     connection = get_connection(environ)
     df = get_all_data(connection)
+
+    df["url_alias"] = df["url"].apply(make_url_alias)
 
     st.set_page_config(page_title="Internet Archiver Dashboard",
                        page_icon=":bar_char:",
@@ -44,3 +53,9 @@ if __name__ == "__main__":
 
             st.dataframe(
                 df_result_search[["url", "at"]], use_container_width=True)
+
+    with col2:
+        st.subheader("Popular Archives")
+        archives = alt.Chart(df).mark_bar().encode(y=alt.Y("count(url)").title("Archive Count"),
+                                                   x=alt.X("url_alias").title("Website").sort("-y"))
+        st.altair_chart(archives, use_container_width=True)
