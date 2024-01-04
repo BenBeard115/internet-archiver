@@ -3,22 +3,91 @@
 }
 
 body {
-  background: #bdddb2;
+  background: #fefaf5;
   font-family: 'Inter', Arial, sans-serif;
 }
 
 
 main {
-  background: #e5f0e1;
+  background: #fefaf5;
   padding: 1rem 3rem 2rem;
   margin: 2rem auto;
   box-shadow: rgba(0, 0, 0, 0.05) -2px -2px 4px;
 }
 
+
+h1.display-1 {
+    font-size: 70px;
+    /* text-align: center; */
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+    /* background-image: url('https: //media.giphy.com/media/YsUVWDh9buWzT8yLx0/giphy-downsized-large.gif'); */
+}
+
+
+
+h2,
+p {
+    /* text-align: center; */
+    font-size: 13px;
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+}
+
+h2.result_message {
+    /* text-align: center; */
+    font-size: 16px;
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+}
+
 header {
-  background: #e5f0e1;
+  background: #fefaf5;
   padding: 1rem 3rem 1rem;
   margin: 2rem auto;
   box-shadow: rgba(0, 0, 0, 0.05) -2px -2px 4px;
 }
 
+form {
+    margin-top: 20px;
+    border: 2px solid #d15353;
+    /* Red border color */
+    padding: 10px;
+    /* Optional: Add padding for a better visual appearance */
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+    border: 1px solid #d15353;
+    border-radius: 4px;
+    font-family: "IBM Plex Mono";
+    color: #253439;
+}
+
+button {
+    background-color: #d15353;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    /* Change cursor to pointer on hover */
+    font-family: "IBM Plex Mono";
+}
+
+button:hover {
+    background-color: #FF5454;
+    /* Change background color on hover */
+}
+
+label {
+    color: #253439;
+    font-family: "IBM Plex Mono";
+}

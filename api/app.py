@@ -12,13 +12,18 @@ from flask import (
     Flask,
     render_template,
     request,
-    jsonify)
+    redirect)
 
 from upload_to_s3 import (
     sanitise_filename,
     extract_title,
     extract_domain,
     upload_file_to_s3
+)
+
+from get_recent_webpages import (
+    get_object_keys,
+    format_object_key_titles
 )
 
 from upload_to_database import (
@@ -87,6 +92,19 @@ def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
 
     return s3_object_key_html, s3_object_key_css
 
+def get_most_recently_saved_web_pages() -> dict:
+    """Get the most recently saved web pages to display on the website."""
+    pages = []
+    s3_client = client('s3',
+                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
+                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
+    titles = format_object_key_titles(keys)
+    for title in titles:
+        pages.append({'display': title, 'url': None})
+    print(pages)
+    return pages
+    
 
 def upload_to_database(response_data: dict) -> None:
     """Uploads website information to the database."""
@@ -99,14 +117,14 @@ def upload_to_database(response_data: dict) -> None:
 def index():
     """Main page of website."""
 
-    return render_template('index.html')
+    status = request.args.get('status')
 
-
-@app.route('/save/index.html')
-def save_index():
-    """Saving new website URL page."""
-
-    return render_template('save/index.html')
+    if status == 'success':
+        return render_template('index.html', result='Save Successful!')
+    elif status == 'failure':
+        return render_template('index.html', result='Sorry, that webpage could not be saved.')
+    else:
+        return render_template('index.html')
 
 
 # Redirect to saved template page... with details
@@ -116,27 +134,31 @@ def save():
 
     url = request.form['url']
 
-    timestamp = datetime.utcnow().isoformat()
-
     try:
         html_file_temp, css_data_temp = save_html_css(url)
-        html_filename, css_filename = upload_to_s3(url,
-                                                   html_file_temp, css_data_temp)
-
-        response_data = {
-            'url': url,
-            'html_filename': html_filename,
-            'css_filename': css_filename,
-            'timestamp': timestamp
-        }
-
-        upload_to_database(response_data)
-
-        return jsonify(response_data)
+        upload_to_s3(url, html_file_temp, css_data_temp)
+        return redirect('/?status=success')
 
     except Exception as e:
-        error_response = {'error': str(e)}
-        return jsonify(error_response), 500
+        return redirect('/?status=failure')
+
+
+@app.route('/saved-pages', methods=['GET','POST'])
+def view_saved_pages():
+    """Allows the user to view a list of currently saved webpages."""
+
+    if request.method == "POST":
+        input = request.form.get("input")
+        return redirect(f"/page/{input}")
+
+    url_links = get_most_recently_saved_web_pages()
+    return render_template("saved_pages.html", links=url_links)
+
+
+@app.get("/page/<input>")
+def dynamic_page(input):
+    return render_template("page.html", input=input)
+# uploads RDS
 
 
 if __name__ == '__main__':
