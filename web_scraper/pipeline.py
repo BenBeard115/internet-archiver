@@ -38,6 +38,10 @@ if __name__ == "__main__":
     for url in list_of_urls:
 
         html_file_name, css_file_name = save_html_css(url)
+
+        # to see which files are being blocked on AWS
+        print(html_file_name)
+        print(css_file_name)
         upload_to_s3(s3_client, url,
                      html_file_name, css_file_name)
         upload_to_rds(connection, url)
