@@ -60,3 +60,6 @@ A `terraform.tfvars` is required in the terraform folder containing:
 
 ## Architecture Diagram
 ![Alt text](architecture_diagram.png)
+
+## ERD Diagram
+![Alt text](erd_diagram.png)
