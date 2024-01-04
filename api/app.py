@@ -26,6 +26,13 @@ from get_recent_webpages import (
     format_object_key_titles
 )
 
+from upload_to_database import (
+    get_connection,
+    add_url,
+    add_website
+)
+
+
 load_dotenv()
 
 app = Flask(__name__)
@@ -99,6 +106,13 @@ def get_most_recently_saved_web_pages() -> dict:
     return pages
     
 
+def upload_to_database(response_data: dict) -> None:
+    """Uploads website information to the database."""
+    connection = get_connection()
+    add_url(connection, response_data)
+    add_website(connection, response_data)
+
+
 @app.route('/')
 def index():
     """Main page of website."""
@@ -113,6 +127,7 @@ def index():
         return render_template('index.html')
 
 
+# Redirect to saved template page... with details
 @app.route('/save', methods=['POST'])
 def save():
     """Allows user to input URL and save HTML and CSS."""
@@ -138,7 +153,6 @@ def view_saved_pages():
 
     url_links = get_most_recently_saved_web_pages()
     return render_template("saved_pages.html", links=url_links)
-
 
 
 @app.get("/page/<input>")

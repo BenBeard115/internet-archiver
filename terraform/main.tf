@@ -16,7 +16,7 @@ resource "aws_s3_bucket" "internet-archiver-bucket" {
   object_lock_enabled = false
 }
 
-resource "aws_s3_bucket_public_access_block" "plant-bucket-public-access" {
+resource "aws_s3_bucket_public_access_block" "internet-archiver-bucket-public-access" {
   bucket = aws_s3_bucket.internet-archiver-bucket.id
 
   block_public_acls       = true
@@ -42,22 +42,38 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "internet-archiver
   }
 }
 
-# task definition for pipeline that extracts url and timestamp and uploads to RDS
-resource "aws_ecs_task_definition" "internet-archiver-rds-taskdef" {
-    family = "c9-internet-archiver-rds-taskdef"
+# task definition for pipeline that extracts non duplicate from S3 and rescrapes them
+resource "aws_ecs_task_definition" "internet-archiver-auto-scraper-taskdef" {
+    family = "c9-internet-archiver-auto-scraper-taskdef"
     network_mode = "awsvpc"
     requires_compatibilities = ["FARGATE"]
     container_definitions = jsonencode([
         {
-            name: "internet-archiver-rds"
-            image: "this will contain image url when made MANUALLY"
+            name: "c9-internet-archiver-auto-scraper"
+            image: "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-internet-archiver-auto-scraper:latest"
             essential: true
             environment: [
-                { name: "DB_HOST", value: var.DB_HOST },
+                { name: "S3_BUCKET", value: var.S3_BUCKET },
+                { name: "DB_IP", value: var.DB_IP },
+                { name: "DB_PORT", value: var.DB_PORT },
+                { name: "DB_NAME", value: var.DB_NAME },
+                { name: "DB_USERNAME", value: var.DB_USERNAME },
                 { name: "DB_PASSWORD", value: var.DB_PASSWORD },
-                { name: "DB_USER", value: var.DB_USER }
-            ]
+                { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
+                { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
+                { name: "URL_TABLE_NAME", value: var.URL_TABLE_NAME },
+                { name: "SCRAPE_TABLE_NAME", value: var.SCRAPE_TABLE_NAME }
+            ],
+            "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": var.AWS_GROUP,
+                "awslogs-region": var.AWS_REGION,
+                "awslogs-stream-prefix": var.AWS_STREAM_PREFIX,
+                "awslogs-create-group": "true"
+            }
         }
+    }
     ])
     execution_role_arn = data.aws_iam_role.execution-role.arn
     memory = 2048
@@ -100,7 +116,7 @@ resource "aws_iam_policy" "schedule-policy" {
                     "states:StartExecution"
                 ],
                 "Resource": [
-                    "${aws_ecs_task_definition.EXAMPLE-TASK-DEF-NAME.arn}"
+                    "${aws_ecs_task_definition.internet-archiver-auto-scraper-taskdef.arn}"
                 ],
                 "Condition": {
                     "ArnLike": {
@@ -142,7 +158,7 @@ resource "aws_scheduler_schedule" "internet-archiver-scraper-schedule" {
         arn      = data.aws_ecs_cluster.c9-cluster.arn
         role_arn = aws_iam_role.schedule-role.arn
         ecs_parameters {
-          task_definition_arn = aws_ecs_task_definition.EXAMPLE-TASK-DEF-NAME.arn
+          task_definition_arn = aws_ecs_task_definition.internet-archiver-auto-scraper-taskdef.arn
           task_count = 1
           launch_type = "FARGATE"
           platform_version = "LATEST"
@@ -153,4 +169,38 @@ resource "aws_scheduler_schedule" "internet-archiver-scraper-schedule" {
           }
         }
     }
+}
+
+
+
+# Creates the security group allowing postgres access
+resource "aws_security_group" "c9-internet-archiver-database-sg" {
+  name        = "c9-internet-archiver-database-sg"
+  description = "Allow inbound postgres traffic"
+  vpc_id      = var.VPC_ID
+
+  ingress {
+    description      = "Postgres access"
+    from_port        = 5432
+    to_port          = 5432
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+}
+
+# Creates the postgres database
+resource "aws_db_instance" "c9_internet_archiver_database" {
+  allocated_storage             = 10
+  db_name                       = "c9_internet_archiver_database"
+  identifier                    = "c9-internet-archiver"
+  engine                        = "postgres"
+  engine_version                = "15.3"
+  instance_class                = "db.t3.micro"
+  publicly_accessible           = true 
+  performance_insights_enabled  = false
+  skip_final_snapshot           = true
+  db_subnet_group_name          = "public_subnet_group"
+  vpc_security_group_ids        = [aws_security_group.c9-internet-archiver-database-sg.id]
+  username                      = var.DB_USERNAME
+  password                      = var.DB_PASSWORD
 }
