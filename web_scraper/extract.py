@@ -25,7 +25,7 @@ def get_database_connection() -> extensions.connection:
 
 
 def load_all_data(conn: extensions.connection) -> set:
-    """Returns all of the truck data from the database."""
+    """Returns all of the url data from the database."""
 
     with conn.cursor() as cur:
         cur.execute(f"""
