@@ -1,9 +1,8 @@
 """Script used to extract from the RDS to get the required URLs."""
 import os
 from os import environ, path, mkdir
-import requests
-from datetime import datetime
 from time import perf_counter
+import requests
 
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -31,7 +30,8 @@ def load_all_data(conn: extensions.connection) -> set:
         cur.execute(f"""
                     SELECT url FROM {environ["URL_TABLE_NAME"]}
                     JOIN {environ["SCRAPE_TABLE_NAME"]} ON
-                    {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id""")
+                    {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id
+                    """)
         urls = cur.fetchall()
 
         if len(urls) == 0:
@@ -55,7 +55,7 @@ def save_html_css(url: str):
     headers = requests.utils.default_headers()
     headers.update({
     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',})
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, timeout=30)
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
