@@ -7,7 +7,7 @@ import re
 from boto3 import client
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 
 
 def sanitise_filename(filename: str) -> str:
@@ -19,7 +19,8 @@ def sanitise_filename(filename: str) -> str:
 def extract_title(url: str) -> str:
     """Extracts title used for s3_filename from given url."""
 
-    page = urlopen(url)
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    page = urlopen(req)
     soup = BeautifulSoup(page, 'html.parser')
     title = soup.title.text.strip()
 
@@ -29,9 +30,11 @@ def extract_title(url: str) -> str:
 def extract_domain(url: str) -> str:
     """Extracts domain name used for s3_filename from given url."""
 
-    regex_pattern = r'(www.[a-z.]*)'
+    regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
 
-    return re.search(regex_pattern, url).group(1)
+    match = re.search(regex_pattern, url)
+
+    return match.group(2) + match.group(3)
 
 
 def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -> None:

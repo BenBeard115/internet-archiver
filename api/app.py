@@ -92,6 +92,7 @@ def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
 
     return s3_object_key_html, s3_object_key_css
 
+
 def get_most_recently_saved_web_pages() -> dict:
     """Get the most recently saved web pages to display on the website."""
     pages = []
@@ -104,7 +105,7 @@ def get_most_recently_saved_web_pages() -> dict:
         pages.append({'display': title, 'url': None})
     print(pages)
     return pages
-    
+
 
 def upload_to_database(response_data: dict) -> None:
     """Uploads website information to the database."""
@@ -137,7 +138,8 @@ def save():
 
     try:
         html_file_temp, css_data_temp = save_html_css(url)
-        html_filename, css_filename = upload_to_s3(url, html_file_temp, css_data_temp)
+        html_filename, css_filename = upload_to_s3(
+            url, html_file_temp, css_data_temp)
 
         response_data = {
             'url': url,
@@ -153,7 +155,7 @@ def save():
         return redirect('/?status=failure')
 
 
-@app.route('/saved-pages', methods=['GET','POST'])
+@app.route('/saved-pages', methods=['GET', 'POST'])
 def view_saved_pages():
     """Allows the user to view a list of currently saved webpages."""
 
