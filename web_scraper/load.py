@@ -26,7 +26,7 @@ def extract_title(url: str) -> str:
         page = urlopen(url)
         soup = BeautifulSoup(page, 'html.parser')
         title = soup.title.text.strip()
-    except ex:
+    except Exception:
         return None
     
     return sanitise_filename(title)
@@ -74,8 +74,10 @@ def upload_to_s3(s3_client: client, url: str, html_filename_temp: str, css_filen
 def save_html_css(url: str) -> str:
     """Scrape HTML and CSS from a given URL and save them."""
 
-    response = requests.get(url)
-    response.raise_for_status()
+    headers = requests.utils.default_headers()
+    headers.update({
+    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',})
+    response = requests.get(url, headers=headers)
 
     soup = BeautifulSoup(response.content, 'html.parser')
     title = sanitise_filename(soup.title.text.strip())

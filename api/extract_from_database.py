@@ -1,21 +1,26 @@
 """Contains functions to extract data from the database."""
+
 from time import perf_counter
 from os import environ
 import logging
+from datetime import datetime
 
 from dotenv import load_dotenv
 from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
+
 
 
 def get_connection(environ: environ) -> extensions.connection:
     """Connects to the postgres database hosted on aws RDS."""
     connect_time = perf_counter()
     logging.info("Connecting to database...")
+
     try:
         conn = connect(user=environ["DB_USERNAME"],
                        dbname=environ["DB_NAME"],
                        password=environ["DB_PASSWORD"],
                        host=environ["DB_IP"])
+
         logging.info("Connected --- %ss.",
                      round(perf_counter() - connect_time, 3))
         return conn
@@ -58,9 +63,11 @@ def extract_data(conn: extensions.connection, url: str) -> list[tuple]:
     return rows
 
 
+
 if __name__ == "__main__":
     load_dotenv()
     logging.getLogger().setLevel(logging.INFO)
 
     connection = get_connection(environ)
     print(extract_data(connection, "https://www.telegraph.co.uk/"))
+
