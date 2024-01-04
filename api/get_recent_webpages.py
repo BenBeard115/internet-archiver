@@ -6,13 +6,15 @@ from boto3 import client
 from dotenv import load_dotenv
 from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
 
+DISPLAY_LIMIT = 8
+
 def get_object_keys(s3_client: client, bucket: str) -> list[str]:
     """Returns a list of object keys from a bucket."""
 
     objects = s3_client.list_objects(Bucket=bucket)["Contents"]
     sorted_objects = sorted(
         objects, key=lambda obj: obj['LastModified'], reverse=True)
-    return [object["Key"] for object in sorted_objects if '.html' in object["Key"]][:8]
+    return [object["Key"] for object in sorted_objects if '.html' in object["Key"]][:DISPLAY_LIMIT]
 
 
 def format_object_key_titles(keys: list[str]) -> list[str]:
@@ -35,17 +37,17 @@ def get_database_connection() -> extensions.connection:
         raise OperationalError("Error connecting to database.") from exc
 
 
-def get_url_from_html_file_name(conn: extensions.connection) -> dict:
-    """Uses an SQL query to get the 8 most recently saved website urls and html file names."""
-    with conn.cursor() as cur:
-        cur.execute("""
-                    SELECT url,html FROM url
-                    JOIN page_scrape ON
-                    url.url_id = page_scrape.url_id
-                    ORDER BY at DESC
-                    LIMIT 8;""")
-        data = cur.fetchall()
-        return data
+# def get_url_from_html_file_name(conn: extensions.connection) -> dict:
+#     """Uses an SQL query to get the 8 most recently saved website urls and html file names."""
+#     with conn.cursor() as cur:
+#         cur.execute("""
+#                     SELECT url,html FROM url
+#                     JOIN page_scrape ON
+#                     url.url_id = page_scrape.url_id
+#                     ORDER BY at DESC
+#                     LIMIT 8;""")
+#         data = cur.fetchall()
+#         return data
 
 
 if __name__ == "__main__":
@@ -60,6 +62,6 @@ if __name__ == "__main__":
 
     connection = get_database_connection()
 
-    print(get_url_from_html_file_name(connection))
+    # print(get_url_from_html_file_name(connection))
 
 
