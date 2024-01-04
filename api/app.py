@@ -133,10 +133,20 @@ def save():
     """Allows user to input URL and save HTML and CSS."""
 
     url = request.form['url']
+    timestamp = datetime.utcnow().isoformat()
 
     try:
         html_file_temp, css_data_temp = save_html_css(url)
-        upload_to_s3(url, html_file_temp, css_data_temp)
+        html_filename, css_filename = upload_to_s3(url, html_file_temp, css_data_temp)
+
+        response_data = {
+            'url': url,
+            'html_filename': html_filename,
+            'css_filename': css_filename,
+            'timestamp': timestamp
+        }
+
+        upload_to_database(response_data)
         return redirect('/?status=success')
 
     except Exception as e:
