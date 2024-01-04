@@ -1,4 +1,7 @@
 # Internet Archiver
+For this project, a website was created which can take inputs of website urls and scrape those pages. This data is then stored and can be redisplayed on the website when requested. A dashboard of the most popular websites to archive and other data was created. Each website is scraped again after 3 hours and all past versions are visible.
+
+
 ## Setup and Installation
 For some folders there will be a `requirements.txt` file. Once in the folder, you can run the following command:
 - `pip3 install -r requirements.txt`
