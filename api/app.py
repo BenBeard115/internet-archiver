@@ -12,13 +12,20 @@ from flask import (
     Flask,
     render_template,
     request,
-    jsonify)
+    jsonify,
+    redirect,
+    send_file)
 
 from upload_to_s3 import (
     sanitise_filename,
     extract_title,
     extract_domain,
     upload_file_to_s3
+)
+
+from get_recent_webpages import (
+    get_object_keys,
+    format_object_key_titles
 )
 
 load_dotenv()
@@ -85,26 +92,14 @@ def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
 def index():
     """Main page of website."""
 
-    url_links = [
-        {"display": "Passive Loathing",
-         "url": "http://www.lel.ed.ac.uk/~gpullum/passive_loathing.html"},
-        {"display": "Don't make fun of renowned author Dan Brown",
-         "url": "https://www.telegraph.co.uk/books/authors/dont-make-fun-of-renowned-dan-brown/"},
-        {"display": "The Meteor Generation",
-         "url": "https://eveninguniverse.com/fiction/the-meteor-generation.html",
-         "author": "Heather Flowers"},
-    ]  # What if these were loaded from a database of some kind? What then?
+    status = request.args.get('status')
 
-    # All variables passed in can be used in the template
-    return render_template("index.html", heading="Home", links=url_links)
-
-
-
-@app.route('/save/input')
-def save_index():
-    """Saving new website URL page."""
-
-    return render_template('save/index.html')
+    if status == 'success':
+        return render_template('index.html', result='Save Successful!')
+    elif status == 'failure':
+        return render_template('index.html', result='Sorry, that webpage could not be saved.')
+    else:
+        return render_template('index.html')
 
 
 @app.route('/save', methods=['POST'])
@@ -113,27 +108,39 @@ def save():
 
     url = request.form['url']
 
-    timestamp = datetime.utcnow().isoformat()
-
     try:
         html_file_temp, css_data_temp = save_html_css(url)
-        html_filename, css_filename = upload_to_s3(url,
-                                                   html_file_temp, css_data_temp)
-
-        response_data = {
-            'url': url,
-            'html_filename': html_filename,
-            'css_filename': css_filename,
-            'timestamp': timestamp
-        }
-
-        return jsonify(response_data)
+        upload_to_s3(url, html_file_temp, css_data_temp)
+        return redirect('/?status=success')
 
     except Exception as e:
-        error_response = {'error': str(e)}
-        return jsonify(error_response), 500
+        return redirect('/?status=failure')
 
 
+@app.route('/saved-pages', methods=['GET','POST'])
+def view_saved_pages():
+    """Allows the user to view a list of currently saved webpages."""
+
+    if request.method == "POST":
+        input = request.form.get("input")
+        return redirect(f"/page/{input}")
+
+    url_links = [
+        {"display": "Passive Loathing",
+         "url": "http://www.lel.ed.ac.uk/~gpullum/passive_loathing.html"},
+        {"display": "Don't make fun of renowned author Dan Brown",
+         "url": "https://www.telegraph.co.uk/books/authors/dont-make-fun-of-renowned-dan-brown/"},
+        {"display": "The Meteor Generation",
+         "url": "https://eveninguniverse.com/fiction/the-meteor-generation.html",
+         "author": "Heather Flowers"},
+    ] 
+    return render_template("saved_pages.html", links=url_links)
+
+
+
+@app.get("/page/<input>")
+def dynamic_page(input):
+    return render_template("page.html", input=input)
 # uploads RDS
 
 

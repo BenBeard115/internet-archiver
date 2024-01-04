@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ input }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+            rel="stylesheet" />
+</head>
+<body>
+    <h1>{{ input|title }}</h1> <!-- Text processing! -->
+    <h2>You found it! You found the <strong>{{ input }}</strong> page!</h2>
+    <a href="/">Return Home</a>
+</body>
+</html>

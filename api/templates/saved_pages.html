@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>The Internet Archiver - Saved Pages</title>
+        <link rel="stylesheet" href="static/style.css">
+        <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+            rel="stylesheet" />
+    </head>
+
+    <body>
+        <!-- HEADER COMPONENT -->
+        <header class="container text-center">
+        <h1 class="display-1">Saved Pages</h1>
+
+        <div>
+            <p>Search for web pages currently archived by users.
+                <br>
+                Or view most recently archived pages.
+            </p>
+        </div>
+
+        <form method="POST">
+            <label for="page_search">Search: </label>
+            <input type="text" id="search_input" name="input" required>
+            <button type="submit">Save</button>
+            <!-- <input type="submit" value="Suggest" /> -->
+        </form>
+
+        <hr>
+        
+        <h1>Recently Saved</h1>
+        <ul>
+        {% for l in links %}
+        <li>
+            <a href={{l.url}}>{{ l.display }}</a>
+            {% if "author" in l %}
+                ({{ l.author }})
+            {% endif %}
+        </li>
+        {% endfor %}
+
+        </main>
+    </body>
+</html>

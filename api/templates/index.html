@@ -13,12 +13,7 @@
     <body>
         <!-- HEADER COMPONENT -->
         <header class="container text-center">
-        <h1 class="display-1">📜 The Internet Archiver</h1>
-        <a href="/save/input" >
-            <button id="save_webpage">
-                Save Webpage 💻
-            </button>
-        </a>
+        <h1 class="display-1">The Internet Archiver</h1>
 
         <div>
             <p>The Internet Archiver empowers you to preserve your favourite web pages for future generations.
@@ -31,9 +26,28 @@
             </p>
         </div>
 
-        <main class="container">
-        <h2>Most Recently Saved Webpages</h2>
-        <div id="webpages"></div>
+        <form action="/save" method="post">
+            <label for="url">Enter URL:</label>
+            <input type="text" id="url" name="url" required>
+            <button type="submit">Save</button>
+        </form>
+        
+        <h2 class="result_message">{{result}}</h2>
+
+        <hr>
+
+        <div>
+            <p>
+            If you don't have a website in mind you can take a look at ones saved by other users using the button below!
+            </p>
+        </div>
+        <button
+        class="btn btn-warning"
+        onclick='window.location.href = "/saved-pages"'
+      >
+        View All Saved Pages
+      </button>
+
         </main>
     </body>
 </html>
