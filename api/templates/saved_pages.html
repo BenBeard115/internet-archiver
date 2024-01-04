@@ -35,7 +35,7 @@
         <ul>
         {% for l in links %}
         <li>
-            <a href={{l.url}}>{{ l.display }}</a>
+            {{ l.display }}
             {% if "author" in l %}
                 ({{ l.author }})
             {% endif %}

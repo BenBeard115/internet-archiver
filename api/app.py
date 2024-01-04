@@ -12,9 +12,7 @@ from flask import (
     Flask,
     render_template,
     request,
-    jsonify,
-    redirect,
-    send_file)
+    redirect)
 
 from upload_to_s3 import (
     sanitise_filename,
@@ -87,6 +85,19 @@ def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
 
     return s3_object_key_html, s3_object_key_css
 
+def get_most_recently_saved_web_pages() -> dict:
+    """Get the most recently saved web pages to display on the website."""
+    pages = []
+    s3_client = client('s3',
+                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
+                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
+    titles = format_object_key_titles(keys)
+    for title in titles:
+        pages.append({'display': title, 'url': None})
+    print(pages)
+    return pages
+    
 
 @app.route('/')
 def index():
@@ -125,15 +136,7 @@ def view_saved_pages():
         input = request.form.get("input")
         return redirect(f"/page/{input}")
 
-    url_links = [
-        {"display": "Passive Loathing",
-         "url": "http://www.lel.ed.ac.uk/~gpullum/passive_loathing.html"},
-        {"display": "Don't make fun of renowned author Dan Brown",
-         "url": "https://www.telegraph.co.uk/books/authors/dont-make-fun-of-renowned-dan-brown/"},
-        {"display": "The Meteor Generation",
-         "url": "https://eveninguniverse.com/fiction/the-meteor-generation.html",
-         "author": "Heather Flowers"},
-    ] 
+    url_links = get_most_recently_saved_web_pages()
     return render_template("saved_pages.html", links=url_links)
 
 

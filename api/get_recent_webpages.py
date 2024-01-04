@@ -36,7 +36,7 @@ def get_database_connection() -> extensions.connection:
 
 
 def get_url_from_html_file_name(conn: extensions.connection) -> dict:
-    """Uses an SQL query to get the website url."""
+    """Uses an SQL query to get the 8 most recently saved website urls and html file names."""
     with conn.cursor() as cur:
         cur.execute("""
                     SELECT url,html FROM url
@@ -52,13 +52,11 @@ if __name__ == "__main__":
 
     load_dotenv()
 
-    # s3_client = client('s3',
-    #                    aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
-    #                    aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
-    
-    # keys = get_object_keys(s3_client, environ['S3_BUCKET'])
-    # print(keys)
-    # print(format_object_key_titles(keys))
+    s3_client = client('s3',
+                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
+                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+
+    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
 
     connection = get_database_connection()
 
