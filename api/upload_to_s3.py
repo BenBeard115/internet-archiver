@@ -30,9 +30,11 @@ def extract_title(url: str) -> str:
 def extract_domain(url: str) -> str:
     """Extracts domain name used for s3_filename from given url."""
 
-    regex_pattern = r'(www.[a-z.]*)'
+    regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
 
-    return re.search(regex_pattern, url).group(1)
+    match = re.search(regex_pattern, url)
+
+    return match.group(2) + match.group(3)
 
 
 def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -> None:
