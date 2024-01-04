@@ -9,8 +9,16 @@
             rel="stylesheet" />
 </head>
 <body>
-    <h1>{{ input|title }}</h1> <!-- Text processing! -->
-    <h2>You found it! You found the <strong>{{ input }}</strong> page!</h2>
+    <h1 class="display-2">Here are saved pages related to <strong>{{ input }}</strong>!</h1>
+    <hr>
+        <ul>
+        {% for l in links %}
+        <li>
+            <a href="{{url_for('load_chosen_article', url=l.url) }}"">{{ l.display }}</a>
+        </li>
+        {% endfor %}
+        </ul>
+    <hr>
     <a href="/">Return Home</a>
 </body>
 </html>

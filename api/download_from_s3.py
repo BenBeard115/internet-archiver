@@ -1,7 +1,7 @@
 """Functions to download HTML and CSS files from S3 bucket."""
 
 from datetime import datetime, timedelta
-from os import environ, path, makedirs
+from os import environ, path, mkdir
 
 from boto3 import client
 from dotenv import load_dotenv
@@ -52,20 +52,31 @@ def get_recent_object_keys(s3_client: client, bucket: str, num_files: int = 10) 
     sorted_contents = sorted(contents, key=lambda x: x['LastModified'], reverse=True)
 
     recent_keys = [
-        o['Key'] for o in sorted_contents[:num_files]
+        o['Key'] for o in sorted_contents[:num_files] if '.html' in o["Key"]
     ]
 
     return recent_keys
 
 
-def download_data_files(s3_client: client, bucket: str, keys: list[str]) -> None:
-    """Downloads the most recent files from S3."""
+def format_object_key_titles(keys: list[str]) -> list[str]:
+    """Formats the keys as standardised titles to be listed on the website."""
+
+    formatted_keys = [key.split('-')[0].replace("  ", " ").replace('/',' - ') for key in keys]
+    return set(formatted_keys)
+
+
+def download_data_files(s3_client: client, bucket: str, keys: list[str], folder_name: str) -> None:
+    """Downloads the files with relevant keys to a folder name of choice."""
+
+    if not path.exists(folder_name):
+        mkdir(folder_name)
 
     for k in keys:
         new_filename = k.replace('/', '-')
 
         print(f"\nDownloading: {k}")
-        s3_client.download_file(bucket, k, new_filename)
+        s3_client.download_file(bucket, k, f"{folder_name}/{new_filename}")
+
 
 
 if __name__ == "__main__":
@@ -75,11 +86,9 @@ if __name__ == "__main__":
     keys = get_object_keys(s3_client, BUCKET)
 
     html_files = filter_keys_by_type(keys, '.html')
-    css_files = filter_keys_by_type(keys, '.css')
 
-    ikea_html = filter_keys_by_website(keys, 'ikea')
-    guardian_html = filter_keys_by_website(keys, 'guardian')
+    ikea_html = filter_keys_by_website(html_files, 'bbc')
 
     most_recent_files = get_recent_object_keys(s3_client, BUCKET, num_files=10)
 
-    download_data_files(s3_client, BUCKET, most_recent_files)
+    download_data_files(s3_client, BUCKET, ikea_html, 'data')

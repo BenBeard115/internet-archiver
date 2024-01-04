@@ -12,7 +12,8 @@ from flask import (
     Flask,
     render_template,
     request,
-    redirect)
+    redirect,
+    send_file)
 
 from upload_to_s3 import (
     sanitise_filename,
@@ -21,15 +22,19 @@ from upload_to_s3 import (
     upload_file_to_s3
 )
 
-from get_recent_webpages import (
-    get_object_keys,
-    format_object_key_titles
-)
-
 from upload_to_database import (
     get_connection,
     add_url,
     add_website
+)
+
+from download_from_s3 import (
+    get_object_keys,
+    filter_keys_by_type,
+    filter_keys_by_website,
+    download_data_files,
+    get_recent_object_keys,
+    format_object_key_titles
 )
 
 
@@ -98,13 +103,28 @@ def get_most_recently_saved_web_pages() -> dict:
     s3_client = client('s3',
                        aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
                        aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
-    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
+    keys = get_recent_object_keys(s3_client, environ['S3_BUCKET'])
     titles = format_object_key_titles(keys)
     for title in titles:
         pages.append({'display': title, 'url': None})
     print(pages)
     return pages
     
+
+def retrieve_searched_for_pages(input: str):
+    """Get the relevant pages that have been searched for."""
+    pages = []
+    s3_client = client('s3',
+                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
+                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
+    html_keys = filter_keys_by_type(keys, '.html')
+    relevant_keys = filter_keys_by_website(html_keys, input)
+    download_data_files(s3_client, environ['S3_BUCKET'], relevant_keys, 'data')
+    for key in relevant_keys:
+        pages.append({'display': key, 'url': f"data/{key.replace('/', '-')}"})
+    return pages
+
 
 def upload_to_database(response_data: dict) -> None:
     """Uploads website information to the database."""
@@ -122,7 +142,7 @@ def index():
     if status == 'success':
         return render_template('index.html', result='Save Successful!')
     elif status == 'failure':
-        return render_template('index.html', result='Sorry, that webpage could not be saved.')
+        return render_template('index.html', result='Sorry, that webpage is not currently supported.')
     else:
         return render_template('index.html')
 
@@ -167,8 +187,15 @@ def view_saved_pages():
 
 @app.get("/page/<input>")
 def dynamic_page(input):
-    return render_template("page.html", input=input)
-# uploads RDS
+    url_links= retrieve_searched_for_pages(input)
+    if len(url_links) == 0:
+        return render_template("page.html")
+    return render_template("page.html", input=input, links=url_links)
+
+
+@app.get("/<url>")
+def load_chosen_article(url):
+    return send_file(url)
 
 
 if __name__ == '__main__':
