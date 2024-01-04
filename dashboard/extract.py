@@ -1,11 +1,11 @@
 """Script containing functions to extract all data from the database."""
 from time import perf_counter
 from os import environ
-from datetime import datetime
 import logging
 
 from dotenv import load_dotenv
 from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
+import pandas as pd
 
 
 def get_connection(environ: environ) -> extensions.connection:
@@ -54,4 +54,4 @@ def get_all_data(conn: extensions.connection):
     logging.info("Data Extracted --- %ss.",
                  round(perf_counter() - extract_time, 3))
 
-    return rows
+    return pd.DataFrame(rows, columns=["url", "at", "html", "css"])
