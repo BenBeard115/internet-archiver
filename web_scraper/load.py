@@ -3,7 +3,7 @@
 from datetime import datetime
 from os import environ, path, getcwd
 from time import perf_counter
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 import re
 import shutil
@@ -27,8 +27,9 @@ def extract_title(current_url: str) -> str:
     """Extracts title used for s3_filename from given url."""
 
     try:
-        page = urlopen(current_url)
-        soup = BeautifulSoup(page, "html.parser")
+        req = Request(current_url, headers={'User-Agent': 'Mozilla/5.0'})
+        page = urlopen(req)
+        soup = BeautifulSoup(page, 'html.parser')
         title = soup.title.text.strip()
     except (URLError, HTTPError):
         return None
@@ -39,9 +40,11 @@ def extract_title(current_url: str) -> str:
 def extract_domain(current_url: str) -> str:
     """Extracts domain name used for s3_filename from given url."""
 
-    regex_pattern = r"(www.[a-z.]*)"
+    regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
 
-    return re.search(regex_pattern, current_url).group(1)
+    match = re.search(regex_pattern, current_url)
+
+    return match.group(2) + match.group(3)
 
 
 def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -> None:
