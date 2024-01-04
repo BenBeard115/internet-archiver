@@ -7,7 +7,7 @@ import re
 from boto3 import client
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 
 
 def sanitise_filename(filename: str) -> str:
@@ -19,7 +19,8 @@ def sanitise_filename(filename: str) -> str:
 def extract_title(url: str) -> str:
     """Extracts title used for s3_filename from given url."""
 
-    page = urlopen(url)
+    req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    page = urlopen(req)
     soup = BeautifulSoup(page, 'html.parser')
     title = soup.title.text.strip()
 
