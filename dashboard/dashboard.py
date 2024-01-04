@@ -9,11 +9,7 @@ import streamlit as st
 import altair as alt
 
 from extract import get_connection, get_all_data
-from dashboard_functions import make_hourly_archive_tracker_line
-
-
-def make_clickable(link):
-    return f'<a target="_blank" href="{link}">{link}</a>'
+from dashboard_functions import make_hourly_archive_tracker_line, make_archive_searchbar, make_popular_archives_bar
 
 
 def make_url_alias(url):
@@ -42,20 +38,9 @@ if __name__ == "__main__":
     col1, col2 = st.columns(2)
 
     with col1:
-        url_search = st.text_input("URL Search", placeholder="Search here...")
-
-        if url_search:
-            df_result_search = df[df['url'].str.contains(
-                url_search, case=False, na=False)]
-
-            st.write("Found {} Archived Records".format(
-                str(df_result_search.shape[0])))
-
-            st.dataframe(
-                df_result_search[["url", "at"]], use_container_width=True)
+        # TODO Add filter to sort by timeframe
+        make_archive_searchbar(df)
 
     with col2:
-        st.subheader("Popular Archives")
-        archives = alt.Chart(df).mark_bar().encode(y=alt.Y("count(url)").title("Archive Count"),
-                                                   x=alt.X("url_alias").title("Website").sort("-y"))
-        st.altair_chart(archives, use_container_width=True)
+        # TODO Only display the 5 most popular websites
+        make_popular_archives_bar(df)
