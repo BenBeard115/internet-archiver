@@ -9,6 +9,7 @@ import shutil
 from boto3 import client
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from psycopg2 import extensions
 from urllib.request import urlopen
 import requests
 
@@ -48,6 +49,35 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
 
     except Exception as e:
         print('Unable to upload file. Please check details!')
+
+
+def upload_to_rds(conn: extensions.connection, url: str, html_filename_temp: str, css_filename_temp: str) -> None:
+    """Uploads HTML and CSS to the RDS."""
+
+    title = extract_title(url)
+
+    if title:
+        url_domain = extract_domain(url)
+        timestamp = datetime.utcnow().isoformat()
+
+        s3_object_key_matcher = f"{url_domain}/{title}"
+
+        s3_object_key_html = f"{url_domain}/{title}/{timestamp}.html"
+        s3_object_key_css = f"{url_domain}/{title}/{timestamp}.css"
+
+        with conn.cursor() as cur:
+            cur.execute(f"""
+                        SELECT url_id FROM {environ["SCRAPE_TABLE_NAME"]}
+                        WHERE html LIKE '%{s3_object_key_matcher}%' AND css LIKE '%{s3_object_key_matcher}%'
+                        """)
+            url_id = cur.fetchall()[0][0]
+            
+            cur.execute(f"""
+                        INSERT INTO {environ["SCRAPE_TABLE_NAME"]}
+                        (url_id, at, html, css) VALUES
+                        ('{url_id}', '{timestamp}', '{s3_object_key_html}', '{s3_object_key_css}')
+                        """)
+            conn.commit()
 
 
 def upload_to_s3(s3_client: client, url: str, html_filename_temp: str, css_filename_temp: str) -> None:

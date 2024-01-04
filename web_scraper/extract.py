@@ -31,7 +31,8 @@ def load_all_data(conn: extensions.connection) -> set:
         cur.execute(f"""
                     SELECT url FROM {environ["URL_TABLE_NAME"]}
                     JOIN {environ["SCRAPE_TABLE_NAME"]} ON
-                    {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id""")
+                    {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id
+                    """)
         urls = cur.fetchall()
 
         if len(urls) == 0:

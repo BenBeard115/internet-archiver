@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from boto3 import client
 
 from extract import get_database_connection, load_all_data, scrape_all_urls
-from load import save_html_css, upload_to_s3
+from load import save_html_css, upload_to_s3, upload_to_rds
 
 
 if __name__ == "__main__":
@@ -34,14 +34,14 @@ if __name__ == "__main__":
     print(f"Connected to S3 --- {perf_counter() - connecting_time}s.")
 
     download = perf_counter()
-    print("Uploading HTML and CSS data to S3...")
+    print("Uploading HTML and CSS data to S3 and RDS...")
     for url in list_of_urls:
 
         html_file_name, css_file_name = save_html_css(url)
-        print(html_file_name)
-        print(css_file_name)
-        """upload_to_s3(s3_client, url,
-                     html_file_name, css_file_name)"""
+        upload_to_s3(s3_client, url,
+                     html_file_name, css_file_name)
+        upload_to_rds(connection, url,
+                      html_file_name, css_file_name)
 
     shutil.rmtree("static/")
 
