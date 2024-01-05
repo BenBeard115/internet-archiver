@@ -116,7 +116,7 @@ resource "aws_iam_policy" "schedule-policy" {
                     "states:StartExecution"
                 ],
                 "Resource": [
-                    "${aws_ecs_task_definition.internet-archiver-auto-scraper-taskdef.arn}"
+                    "${aws_ecs_task_definition.c9-internet-archiver-auto-scraper-taskdef.arn}"
                 ],
                 "Condition": {
                     "ArnLike": {
@@ -158,7 +158,7 @@ resource "aws_scheduler_schedule" "c9-internet-archiver-scraper-schedule" {
         arn      = data.aws_ecs_cluster.c9-cluster.arn
         role_arn = aws_iam_role.schedule-role.arn
         ecs_parameters {
-          task_definition_arn = aws_ecs_task_definition.internet-archiver-auto-scraper-taskdef.arn
+          task_definition_arn = aws_ecs_task_definition.c9-internet-archiver-auto-scraper-taskdef.arn
           task_count = 1
           launch_type = "FARGATE"
           platform_version = "LATEST"
@@ -213,7 +213,7 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-dashboard-taskdef" {
     container_definitions = jsonencode([
         {
             name: "c9-internet-archiver-dashboard"
-            image: "LATEST IMAGE URL FOR DASHBOARD HERE"
+            image: "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-internet-archiver-dashboard:latest"
             essential: true
             portMappings: [{
                 containerPort = 8501
@@ -224,10 +224,7 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-dashboard-taskdef" {
                 { name: "DB_PORT", value: var.DB_PORT },
                 { name: "DB_NAME", value: var.DB_NAME },
                 { name: "DB_USERNAME", value: var.DB_USERNAME},
-                { name: "DB_PASSWORD", value: var.DB_PASSWORD },
-                { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
-                { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
-                { name: "S3_BUCKET", value: var.S3_BUCKET }
+                { name: "DB_PASSWORD", value: var.DB_PASSWORD }
             ]
         }
     ])
@@ -261,7 +258,7 @@ resource "aws_security_group" "c9-internet-archiver-dashboard-securitygroup" {
 resource "aws_ecs_service" "c9-internet-archiver-dashboard-service" {
     name = "c9-internet-archiver-dashboard-service"
     cluster = data.aws_ecs_cluster.c9-cluster.id
-    task_definition = aws_ecs_task_definition.INSERT DASHBOARD TASK DEF HERE.arn
+    task_definition = aws_ecs_task_definition.c9-internet-archiver-dashboard-taskdef.arn
     desired_count = 1
     launch_type = "FARGATE"
     network_configuration {
@@ -279,7 +276,7 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-website-taskdef" {
     container_definitions = jsonencode([
         {
             name: "c9-internet-archiver-website"
-            image: "LATEST IMAGE URL FOR WEBSITE HERE"
+            image: "129033205317.dkr.ecr.eu-west-2.amazonaws.com/c9-internet-archiver-website:latest"
             essential: true
             portMappings: [{
                 containerPort = 5000
@@ -293,7 +290,10 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-website-taskdef" {
                 { name: "DB_PASSWORD", value: var.DB_PASSWORD },
                 { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
                 { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
-                { name: "S3_BUCKET", value: var.S3_BUCKET }
+                { name: "S3_BUCKET", value: var.S3_BUCKET },
+                { name: "URL_TABLE_NAME", value: var.URL_TABLE_NAME },
+                { name: "SCRAPE_TABLE_NAME", value: var.SCRAPE_TABLE_NAME },
+                
             ]
         }
     ])
@@ -327,7 +327,7 @@ resource "aws_security_group" "c9-internet-archiver-website-securitygroup" {
 resource "aws_ecs_service" "c9-internet-archiver-website-service" {
     name = "c9-internet-archiver-website-service"
     cluster = data.aws_ecs_cluster.c9-cluster.id
-    task_definition = aws_ecs_task_definition.INSERT DASHBOARD TASK DEF HERE.arn
+    task_definition = aws_ecs_task_definition.c9-internet-archiver-website-taskdef.arn
     desired_count = 1
     launch_type = "FARGATE"
     network_configuration {
