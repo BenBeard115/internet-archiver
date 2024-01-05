@@ -5,13 +5,48 @@ import altair as alt
 import streamlit as st
 
 
-def make_timeframe_filter(df: pd.DataFrame):
+def make_date_radio():
+    radio = st.sidebar.radio(label='Date Filter', options=[
+        'None', 'Date Range', "Singular Date"])
+
+    st.sidebar.write(
+        """<style>div.row-widget.stRadio > div{flex-direction:row;}</style>""", unsafe_allow_html=True)
+
+    return radio
+
+
+def make_date_filter(df: pd.DataFrame, radio: str):
     """Makes a date filter"""
-    today = datetime.today()
-    # Defaults to today
-    selected_date = st.sidebar.date_input(
-        "Select a date", today, key='date_selector')
-    return df[df['at'].dt.date == selected_date]
+    min_date = min(df['at'].dt.date)
+    max_date = max(df['at'].dt.date)
+
+    st.markdown(
+        """
+    <style>
+        div[class="stDateInput"] div[class="st-b8"] input {
+            color: white;
+        }
+        div[role="presentation"] div{
+            color: white;
+        }
+    </style>
+    """,
+        unsafe_allow_html=True,)
+
+    if radio == "Singular Date":
+        today = datetime.today()
+        # Defaults to today
+        selected_date = st.sidebar.date_input(
+            "Select a date", today, key='date_selector', min_value=min_date, max_value=max_date)
+        return df[df['at'].dt.date == selected_date]
+
+    if radio == "Date Range":
+        selected_date = st.sidebar.date_input(
+            "Select a date", (min_date, max_date), key='date_selector', min_value=min_date, max_value=max_date)
+
+        return df[(df['at'].dt.date >= selected_date[0]) & (df['at'].dt.date <= selected_date[1])]
+
+    return df
 
 
 def make_hourly_archive_tracker_line(data: pd.DataFrame):

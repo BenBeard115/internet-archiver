@@ -14,7 +14,8 @@ from dashboard_functions import (
     make_archive_searchbar,
     make_popular_archives_bar,
     make_daily_archive_tracker_line,
-    make_timeframe_filter)
+    make_date_filter,
+    make_date_radio)
 
 
 def make_url_alias(url):
@@ -37,8 +38,9 @@ if __name__ == "__main__":
                        layout="wide")
 
     st.title("Internet Archiver Dashboard")
+    radio = make_date_radio()
 
-    selected_date_df = make_timeframe_filter(df)
+    selected_date_df = make_date_filter(df, radio)
 
     selected_website_df = make_archive_searchbar(selected_date_df)
 
