@@ -8,7 +8,7 @@ import requests
 from dotenv import load_dotenv
 from boto3 import client
 
-from extract import get_database_connection, load_all_data, scrape_all_urls
+from extract import get_database_connection, load_all_data
 from load import save_html_css, upload_to_s3, upload_to_rds
 
 
@@ -22,11 +22,6 @@ if __name__ == "__main__":
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
 
-    scraper = perf_counter()
-    print("Scraping websites...")
-    scrape_all_urls(list_of_urls)
-    print(f"Websites scraped --- {perf_counter() - scraper}s.")
-
     connecting_time = perf_counter()
     print("Connecting to S3...")
     s3_client = client("s3",
@@ -35,7 +30,7 @@ if __name__ == "__main__":
     print(f"Connected to S3 --- {perf_counter() - connecting_time}s.")
 
     download = perf_counter()
-    print("Uploading HTML and CSS data to S3 and RDS...")
+    print("Scraping and uploading HTML and CSS data to S3 and RDS...")
     for url in list_of_urls:
 
         try:
