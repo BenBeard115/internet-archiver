@@ -200,6 +200,7 @@ def save():
 
         upload_to_database(response_data)
         response_data_serialised = json.dumps(response_data)
+
         return redirect(f'/?status=success&summary={gpt_summary}&response={response_data_serialised}')
 
     except Exception as e:
