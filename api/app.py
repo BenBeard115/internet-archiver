@@ -27,10 +27,11 @@ from get_recent_webpages import (
 )
 
 from upload_to_database import (
-    get_connection,
     add_url,
     add_website
 )
+
+from connect import get_connection
 
 
 load_dotenv()

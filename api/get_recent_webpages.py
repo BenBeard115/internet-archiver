@@ -4,8 +4,8 @@ from os import environ, path, mkdir
 
 from boto3 import client
 from dotenv import load_dotenv
-from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
 
+from connect import get_connection
 DISPLAY_LIMIT = 8
 
 def get_object_keys(s3_client: client, bucket: str) -> list[str]:
@@ -22,19 +22,6 @@ def format_object_key_titles(keys: list[str]) -> list[str]:
     formatted_keys = [key.split('-')[0].replace("  ", " ").replace('/',' - ') for key in keys]
     return set(formatted_keys)
 
-
-def get_database_connection() -> extensions.connection:
-    """Connects you to the database, and returns an error if unable to connect."""
-
-    try:
-        return connect(host=environ["DB_IP"],
-                       port=environ["DB_PORT"],
-                       database=environ["DB_NAME"],
-                       user=environ["DB_USERNAME"],
-                       password=environ["DB_PASSWORD"])
-
-    except OperationalError as exc:
-        raise OperationalError("Error connecting to database.") from exc
 
 
 # def get_url_from_html_file_name(conn: extensions.connection) -> dict:
@@ -60,7 +47,7 @@ if __name__ == "__main__":
 
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
 
-    connection = get_database_connection()
+    connection = get_connection()
 
     # print(get_url_from_html_file_name(connection))
 

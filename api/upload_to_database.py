@@ -5,26 +5,9 @@ from datetime import datetime
 import logging
 
 from dotenv import load_dotenv
-from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
+from psycopg2 import sql, extensions
 
-
-def get_connection() -> extensions.connection:
-    """Connects to the postgres database hosted on aws RDS."""
-    connect_time = perf_counter()
-    logging.info("Connecting to database...")
-    try:
-        conn = connect(user=environ["DB_USERNAME"],
-                       dbname=environ["DB_NAME"],
-                       password=environ["DB_PASSWORD"],
-                       host=environ["DB_IP"])
-        logging.info("Connected --- %ss.",
-                     round(perf_counter() - connect_time, 3))
-        return conn
-
-    except (Exception, DatabaseError, OperationalError) as error:
-        logging.warning("%s --- %ss.",
-                        error, round(perf_counter() - connect_time, 3))
-        raise error
+from connect import get_connection
 
 
 def add_url(conn: extensions.connection, response_data: dict) -> None:
