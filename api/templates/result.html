@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ input }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+            rel="stylesheet" />
+</head>
+<body>
+    <h1 class="display-2">Here are saved pages related to <strong>{{ input }}</strong>!</h1>
+    <hr>
+        <ul>
+        {% for l in links %}
+        <li>
+            <a href="{{ url_for('display_page', display=l.display, filename=l.filename)}}" target="_blank">{{ l.display }}</a>
+            
+
+        </li>
+        {% endfor %}
+        </ul>
+    <hr>
+    <button
+        class="btn btn-warning"
+        onclick='window.location.href = "/"'
+      >
+        Return Home
+    </button>
+</body>
+</html>
