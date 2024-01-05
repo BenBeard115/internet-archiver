@@ -43,6 +43,7 @@ Your mission is to make each summary an invitation, sparking curiosity and encou
         ]
     )
 
+    print(completion.choices[0].message.content)
     return completion.choices[0].message.content
 
 
