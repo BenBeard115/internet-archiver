@@ -132,7 +132,7 @@ def retrieve_searched_for_pages(input: str):
 
 def upload_to_database(response_data: dict) -> None:
     """Uploads website information to the database."""
-    connection = get_connection()
+    connection = get_connection(environ)
     add_url(connection, response_data)
     add_website(connection, response_data)
 
@@ -175,6 +175,7 @@ def save():
         return redirect('/?status=success')
 
     except Exception as e:
+        print(f"Error: {str(e)}")
         return redirect('/?status=failure')
 
 
