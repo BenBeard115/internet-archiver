@@ -54,7 +54,7 @@ def extract_domain(current_url: str) -> str:
     domain = match.group(0).replace("https://", "").replace("http://", "")
 
     while "/" in domain:
-        domain = domain.replace("/", "")
+        domain = domain.replace("/", " ")
 
     return domain
 
