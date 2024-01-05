@@ -52,6 +52,10 @@ def extract_domain(current_url: str) -> str:
         return None
 
     domain = match.group(0).replace("https://", "").replace("http://", "")
+
+    while "/" in domain:
+        domain = domain.replace("/", "")
+
     return domain
 
 
@@ -90,17 +94,7 @@ def upload_to_rds(conn: extensions.connection, current_url: str) -> None:
             try:
                 url_id = cur.fetchall()[0][0]
             except IndexError:
-                cur.execute(f"""
-                        SELECT MAX(url_id) FROM {environ["SCRAPE_TABLE_NAME"]}
-                        """)
-                url_id = int(cur.fetchall()[0][0]) + 1
-                print(url_id)
-                
-                cur.execute(f"""
-                        INSERT INTO {environ["URL_TABLE_NAME"]}
-                        (url) VALUES
-                        ('{current_url}')
-                        """)
+                return
 
             cur.execute(f"""
                         INSERT INTO {environ["SCRAPE_TABLE_NAME"]}
