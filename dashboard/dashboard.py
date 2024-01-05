@@ -25,15 +25,17 @@ def make_url_alias(url):
     return match.group(3)
 
 
-if __name__ == "__main__":
+def setup_database():
     load_dotenv()
     logging.getLogger().setLevel(logging.INFO)
 
     connection = get_connection(environ)
     df = get_all_data(connection)
-
     df["url_alias"] = df["url"].apply(make_url_alias)
+    return df
 
+
+def setup_page():
     img = Image.open("archive_image.png")
 
     st.set_page_config(page_title="Internet Archiver Dashboard",
@@ -41,6 +43,13 @@ if __name__ == "__main__":
                        layout="wide")
 
     st.title("Internet Archiver Dashboard")
+
+
+if __name__ == "__main__":
+    df = setup_database()
+
+    setup_page()
+
     radio = make_date_radio()
 
     selected_date_df = make_date_filter(df, radio)
