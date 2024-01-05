@@ -6,11 +6,12 @@ import streamlit as st
 
 
 def make_timeframe_filter(df: pd.DataFrame):
+    """Makes a date filter"""
     today = datetime.today()
+    # Defaults to today
     selected_date = st.sidebar.date_input(
         "Select a date", today, key='date_selector')
-    selected_df = df[df['at'].dt.date == selected_date]
-    return selected_df
+    return df[df['at'].dt.date == selected_date]
 
 
 def make_hourly_archive_tracker_line(data: pd.DataFrame):
@@ -19,7 +20,7 @@ def make_hourly_archive_tracker_line(data: pd.DataFrame):
 
     archived = alt.Chart(data).mark_line().encode(
         x=alt.X("hours(at):O").title("Time"),
-        y=alt.Y("count(url):Q").title("Archives"))
+        y=alt.Y("count(url):Q").title("Archives")).configure_line(color="#d15353")
 
     st.altair_chart(archived, use_container_width=True)
 
@@ -30,7 +31,7 @@ def make_daily_archive_tracker_line(data: pd.DataFrame):
 
     archived = alt.Chart(data).mark_line().encode(
         x=alt.X("monthdate(at):O").title("Time"),
-        y=alt.Y("count(url):Q").title("Archives"))
+        y=alt.Y("count(url):Q").title("Archives")).configure_line(color="#d15353")
 
     st.altair_chart(archived, use_container_width=True)
 
@@ -62,11 +63,12 @@ def make_popular_archives_bar(data: pd.DataFrame):
     """Makes a bar chart for the most popular sites to archive."""
     st.subheader("Popular Archives")
     # TODO Add text to each bar of the number of visits (only possible when visits added)
+    # Gets the 10 most popular websites
     data = data.groupby(['url_alias'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(10)
 
     archives = alt.Chart(data).mark_bar().encode(y=alt.Y("Count").title("Archive Count"),
                                                  x=alt.X("url_alias").title(
-                                                     "Website").sort("-y"))
+                                                     "Website").sort("-y")).configure_bar(color="#d15353")
 
     st.altair_chart(archives, use_container_width=True)

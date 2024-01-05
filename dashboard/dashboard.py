@@ -51,6 +51,5 @@ if __name__ == "__main__":
             make_hourly_archive_tracker_line(selected_website_df)
 
     with col2:
-        # TODO Only display the 5 most popular websites
         if selected_date_df.shape[0] > 0:
             make_popular_archives_bar(selected_date_df)
