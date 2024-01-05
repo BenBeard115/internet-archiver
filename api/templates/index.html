@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>The Internet Archiver</title>
-        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-        <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
-            rel="stylesheet" />
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Internet Archiver</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+</head>
 
-    <body>
-        <!-- HEADER COMPONENT -->
-        <header class="container text-center">
+<body>
+    <!-- HEADER COMPONENT -->
+    <header class="container text-center">
         <h1 class="display-1">The Internet Archiver</h1>
 
         <div>
@@ -21,8 +21,8 @@
                 Simply submit a URL, and we'll capture and store the webpage's HTML and CSS, keeping a record of
                 its content and styling.
                 <br>
-                The Internet Archiver automatically scrapes your webpage at a frequency of your choice, allowing you
-                to keep track the evolution of its content.
+                We will then automatically scrape your webpage every 3 hours, allowing you
+                to keep track of the evolution of its content.
             </p>
         </div>
 
@@ -31,23 +31,24 @@
             <input type="text" id="url" name="url" required>
             <button type="submit">Save</button>
         </form>
-        
-        <h2 class="result_message">{{result}}</h2>
+
+        <h2 class="result_message">{{ result }}</h2>
+
+        <p class="saved_url">{{ response_data.url }}</p>
+        <p class="gpt_summary">{{ gpt_summary }}</p>
 
         <hr>
 
         <div>
             <p>
-            If you don't have a website in mind you can take a look at ones saved by other users using the button below!
+                If you don't have a website in mind, take a look at pages saved by other users using the button below.
             </p>
         </div>
-        <button
-        class="btn btn-warning"
-        onclick='window.location.href = "/saved-pages"'
-      >
-        View All Saved Pages
-      </button>
+        <button class="btn btn-warning" onclick='window.location.href = "/saved-pages"'>
+            View All Saved Pages
+        </button>
 
         </main>
-    </body>
+</body>
+
 </html>
