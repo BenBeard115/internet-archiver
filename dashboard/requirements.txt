@@ -1,0 +1,5 @@
+python-dotenv
+psycopg2
+streamlit
+altair
+pandas

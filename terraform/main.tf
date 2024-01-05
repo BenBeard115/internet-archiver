@@ -43,7 +43,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "internet-archiver
 }
 
 # task definition for pipeline that extracts non duplicate from S3 and rescrapes them
-resource "aws_ecs_task_definition" "internet-archiver-auto-scraper-taskdef" {
+resource "aws_ecs_task_definition" "c9-internet-archiver-auto-scraper-taskdef" {
     family = "c9-internet-archiver-auto-scraper-taskdef"
     network_mode = "awsvpc"
     requires_compatibilities = ["FARGATE"]
@@ -148,7 +148,7 @@ resource "aws_iam_policy_attachment" "schedule-policy-attachment" {
 }
 
 # create EventBridge schedule for web scraper script
-resource "aws_scheduler_schedule" "internet-archiver-scraper-schedule" {
+resource "aws_scheduler_schedule" "c9-internet-archiver-scraper-schedule" {
     name       = "c9-internet-archiver-scraper-schedule"
     schedule_expression = "cron(0 9-18/3 * * ? *)"
     flexible_time_window {
@@ -203,4 +203,136 @@ resource "aws_db_instance" "c9_internet_archiver_database" {
   vpc_security_group_ids        = [aws_security_group.c9-internet-archiver-database-sg.id]
   username                      = var.DB_USERNAME
   password                      = var.DB_PASSWORD
+}
+
+# task definition for dashboard
+resource "aws_ecs_task_definition" "c9-internet-archiver-dashboard-taskdef" {
+    family = "c9-internet-archiver-dashboard-taskdef"
+    network_mode = "awsvpc"
+    requires_compatibilities = ["FARGATE"]
+    container_definitions = jsonencode([
+        {
+            name: "c9-internet-archiver-dashboard"
+            image: "LATEST IMAGE URL FOR DASHBOARD HERE"
+            essential: true
+            portMappings: [{
+                containerPort = 8501
+                hostPort = 8501
+            }]
+            environment: [
+                { name: "DB_IP", value: var.DB_IP },
+                { name: "DB_PORT", value: var.DB_PORT },
+                { name: "DB_NAME", value: var.DB_NAME },
+                { name: "DB_USERNAME", value: var.DB_USERNAME},
+                { name: "DB_PASSWORD", value: var.DB_PASSWORD },
+                { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
+                { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
+                { name: "S3_BUCKET", value: var.S3_BUCKET }
+            ]
+        }
+    ])
+    execution_role_arn = data.aws_iam_role.execution-role.arn
+    memory = 2048
+    cpu = 1024
+}
+
+# security group to allow inbound traffic on port 8501 for the dashboard
+resource "aws_security_group" "c9-internet-archiver-dashboard-securitygroup" {
+  name        = "c9-internet-archiver-dashboard-securitygroup"
+  description = "Allow inbound traffic for port 8501, so users can see the dashboard"
+  vpc_id      = "vpc-04423dbb18410aece"
+
+  ingress {
+    from_port   = 8501
+    to_port     = 8501
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# start ECS service for the dashboard
+resource "aws_ecs_service" "c9-internet-archiver-dashboard-service" {
+    name = "c9-internet-archiver-dashboard-service"
+    cluster = data.aws_ecs_cluster.c9-cluster.id
+    task_definition = aws_ecs_task_definition.INSERT DASHBOARD TASK DEF HERE.arn
+    desired_count = 1
+    launch_type = "FARGATE"
+    network_configuration {
+      subnets = ["subnet-0d0b16e76e68cf51b", "subnet-081c7c419697dec52", "subnet-02a00c7be52b00368"]
+      security_groups = [aws_security_group.c9-internet-archiver-dashboard-securitygroup.id]
+      assign_public_ip = true
+    }
+}
+
+# task definition for the website
+resource "aws_ecs_task_definition" "c9-internet-archiver-website-taskdef" {
+    family = "c9-internet-archiver-website-taskdef"
+    network_mode = "awsvpc"
+    requires_compatibilities = ["FARGATE"]
+    container_definitions = jsonencode([
+        {
+            name: "c9-internet-archiver-website"
+            image: "LATEST IMAGE URL FOR WEBSITE HERE"
+            essential: true
+            portMappings: [{
+                containerPort = 5000
+                hostPort = 5000
+            }]
+            environment: [
+                { name: "DB_IP", value: var.DB_IP },
+                { name: "DB_PORT", value: var.DB_PORT },
+                { name: "DB_NAME", value: var.DB_NAME },
+                { name: "DB_USERNAME", value: var.DB_USERNAME},
+                { name: "DB_PASSWORD", value: var.DB_PASSWORD },
+                { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
+                { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
+                { name: "S3_BUCKET", value: var.S3_BUCKET }
+            ]
+        }
+    ])
+    execution_role_arn = data.aws_iam_role.execution-role.arn
+    memory = 2048
+    cpu = 1024
+}
+
+# security group to allow inbound traffic on port 5000 for the website
+resource "aws_security_group" "c9-internet-archiver-website-securitygroup" {
+  name        = "c9-internet-archiver-website-securitygroup"
+  description = "Allow inbound traffic for port 5000, so users can see the website"
+  vpc_id      = "vpc-04423dbb18410aece"
+
+  ingress {
+    from_port   = 5000
+    to_port     = 5000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# start ECS service for the dashboard
+resource "aws_ecs_service" "c9-internet-archiver-website-service" {
+    name = "c9-internet-archiver-website-service"
+    cluster = data.aws_ecs_cluster.c9-cluster.id
+    task_definition = aws_ecs_task_definition.INSERT DASHBOARD TASK DEF HERE.arn
+    desired_count = 1
+    launch_type = "FARGATE"
+    network_configuration {
+      subnets = ["subnet-0d0b16e76e68cf51b", "subnet-081c7c419697dec52", "subnet-02a00c7be52b00368"]
+      security_groups = [aws_security_group.c9-internet-archiver-website-securitygroup.id]
+      assign_public_ip = true
+    }
 }

@@ -46,7 +46,7 @@ def convert_to_set(urls: list[str]) -> set:
     return set(urls)
 
 
-def save_html_css(url: str):
+def save_html_css(url: str) -> None:
     """Scrape HTML and CSS from a given URL and save them."""
 
     if not path.exists('static'):
@@ -55,7 +55,11 @@ def save_html_css(url: str):
     headers = requests.utils.default_headers()
     headers.update({
     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',})
-    response = requests.get(url, headers=headers, timeout=30)
+
+    try:
+        response = requests.get(url, headers=headers, timeout=30)
+    except requests.exceptions.ReadTimeout:
+        return
 
     soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -74,8 +78,6 @@ def save_html_css(url: str):
 
     with open(os.path.join(static_folder, css_filename), 'w', encoding='utf-8') as css_file:
         css_file.write(css_content)
-
-    return html_filename, css_filename
 
 
 def scrape_all_urls(urls: set) -> None:

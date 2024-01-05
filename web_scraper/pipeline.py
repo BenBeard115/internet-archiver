@@ -3,6 +3,7 @@
 from time import perf_counter
 from os import environ
 import shutil
+import requests
 
 from dotenv import load_dotenv
 from boto3 import client
@@ -37,7 +38,14 @@ if __name__ == "__main__":
     print("Uploading HTML and CSS data to S3 and RDS...")
     for url in list_of_urls:
 
-        html_file_name, css_file_name = save_html_css(url)
+        try:
+            html_file_name, css_file_name = save_html_css(url)
+        except requests.exceptions.ReadTimeout:
+            continue
+
+        # to see which files are being blocked on AWS
+        print(html_file_name)
+        print(css_file_name)
         upload_to_s3(s3_client, url,
                      html_file_name, css_file_name)
         upload_to_rds(connection, url)

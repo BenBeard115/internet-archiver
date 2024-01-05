@@ -3,7 +3,7 @@
 from datetime import datetime
 from os import environ, path, getcwd
 from time import perf_counter
-from urllib.request import urlopen
+from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 import re
 import shutil
@@ -20,6 +20,11 @@ import requests
 def sanitise_filename(filename: str) -> str:
     """Remove special characters from filename."""
 
+    try:
+        filename = str(filename)
+    except TypeError:
+        raise TypeError("This input cannot be sanitised!")
+
     return re.sub(r'[^\w\s.-]', ' ', filename)
 
 
@@ -27,8 +32,9 @@ def extract_title(current_url: str) -> str:
     """Extracts title used for s3_filename from given url."""
 
     try:
-        page = urlopen(current_url)
-        soup = BeautifulSoup(page, "html.parser")
+        req = Request(current_url, headers={'User-Agent': 'Mozilla/5.0'})
+        page = urlopen(req)
+        soup = BeautifulSoup(page, 'html.parser')
         title = soup.title.text.strip()
     except (URLError, HTTPError):
         return None
@@ -39,9 +45,14 @@ def extract_title(current_url: str) -> str:
 def extract_domain(current_url: str) -> str:
     """Extracts domain name used for s3_filename from given url."""
 
-    regex_pattern = r"(www.[a-z.]*)"
+    regex_pattern = r'(http[s]?:\/\/)?[^\s(["<,>]*\.[\w]+[^\s.[",><]*'
 
-    return re.search(regex_pattern, current_url).group(1)
+    match = re.match(regex_pattern, current_url)
+    if not match:
+        return None
+
+    domain = match.group(0).replace("https://", "").replace("http://", "")
+    return domain
 
 
 def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -> None:
@@ -90,9 +101,9 @@ def upload_to_s3(s3_client: client, current_url: str, html_filename_temp: str,
     """Uploads HTML and CSS to S3 bucket."""
 
     title = extract_title(current_url)
+    url_domain = extract_domain(current_url)
 
-    if title:
-        url_domain = extract_domain(current_url)
+    if title and url_domain:
         timestamp = datetime.utcnow().isoformat()
 
         html_file_to_upload = f"static/{html_filename_temp}"
