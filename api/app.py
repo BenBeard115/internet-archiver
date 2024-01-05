@@ -195,10 +195,10 @@ def view_saved_pages():
 def dynamic_page(input):
     """Navigates to a page specific to what the user searched for."""
 
-    url_links= retrieve_searched_for_pages(input)
+    url_links = retrieve_searched_for_pages(input)
     if len(url_links) == 0:
-        return render_template("page.html")
-    return render_template("page.html", input=input, links=url_links)
+        return render_template("search_error.html", input=input)
+    return render_template("result.html", input=input, links=url_links)
 
 
 @app.get("/display-page")

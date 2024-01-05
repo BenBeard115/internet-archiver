@@ -9,18 +9,20 @@
             rel="stylesheet" />
 </head>
 <body>
-    <h1 class="display-2">Here are saved pages related to <strong>{{ input }}</strong>!</h1>
-    <hr>
-        <ul>
-        {% for l in links %}
-        <li>
-            <a href="{{ url_for('display_page', display=l.display, filename=l.filename)}}" target="_blank">{{ l.display }}</a>
-            
+    <h1 class="display-3">No results found for <strong>{{ input }}</strong>!</h2>
 
-        </li>
-        {% endfor %}
-        </ul>
-    <hr>
-    <a href="/">Return Home</a>
+    <button
+        class="btn btn-warning"
+        onclick='window.location.href = "/"'
+      >
+        Return Home
+    </button>
+
+    <button
+        class="btn btn-warning"
+        onclick='window.location.href = "/saved-pages"'
+      >
+        Search Again
+    </button>
 </body>
 </html>
