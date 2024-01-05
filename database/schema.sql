@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS page_scrape CASCADE;
 CREATE TABLE url (
     url_id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
-    visits INT,
+    visit_count INT,
     summary TEXT
 );
 
