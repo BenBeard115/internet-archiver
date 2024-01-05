@@ -3,3 +3,4 @@ psycopg2
 streamlit
 altair
 pandas
+pillow

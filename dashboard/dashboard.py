@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import pandas as pd
 import streamlit as st
 import altair as alt
+from PIL import Image
 
 from extract import get_connection, get_all_data
 from dashboard_functions import (
@@ -33,8 +34,10 @@ if __name__ == "__main__":
 
     df["url_alias"] = df["url"].apply(make_url_alias)
 
+    img = Image.open("archive_image.png")
+
     st.set_page_config(page_title="Internet Archiver Dashboard",
-                       page_icon=":bar_char:",
+                       page_icon=img,
                        layout="wide")
 
     st.title("Internet Archiver Dashboard")

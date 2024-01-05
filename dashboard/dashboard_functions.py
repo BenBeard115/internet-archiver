@@ -23,9 +23,7 @@ def make_date_filter(df: pd.DataFrame, radio: str):
     st.markdown(
         """
     <style>
-        div[class="stDateInput"] div[class="st-b8"] input {
-            color: white;
-        }
+
         div[role="presentation"] div{
             color: white;
         }
@@ -44,7 +42,11 @@ def make_date_filter(df: pd.DataFrame, radio: str):
         selected_date = st.sidebar.date_input(
             "Select a date", (min_date, max_date), key='date_selector', min_value=min_date, max_value=max_date)
 
-        return df[(df['at'].dt.date >= selected_date[0]) & (df['at'].dt.date <= selected_date[1])]
+        if len(selected_date) == 2:
+            return df[(df['at'].dt.date >= selected_date[0]) & (df['at'].dt.date <= selected_date[1])]
+
+        else:
+            return df[df['at'].dt.date == selected_date[0]]
 
     return df
 
@@ -98,9 +100,9 @@ def make_popular_archives_bar(data: pd.DataFrame):
     """Makes a bar chart for the most popular sites to archive."""
     st.subheader("Popular Archives")
     # TODO Add text to each bar of the number of visits (only possible when visits added)
-    # Gets the 10 most popular websites
+    # Gets the 5 most popular websites
     data = data.groupby(['url_alias'])['url_alias'].count().reset_index(
-        name='Count').sort_values(['Count'], ascending=False).head(10)
+        name='Count').sort_values(['Count'], ascending=False).head(5)
 
     archives = alt.Chart(data).mark_bar().encode(y=alt.Y("Count").title("Archive Count"),
                                                  x=alt.X("url_alias").title(
