@@ -1,7 +1,7 @@
 """Script used to insert the re-scraped HTML and CSS files into the S3 bucket."""
 
 from datetime import datetime
-from os import environ, path, getcwd
+from os import environ, path, getcwd, mkdir
 from time import perf_counter
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -134,6 +134,9 @@ def upload_to_s3(s3_client: client, current_url: str, html_filename_temp: str,
 
 def save_html_css(current_url: str) -> str:
     """Scrape HTML and CSS from a given URL and save them."""
+
+    if not path.exists('static'):
+        mkdir('static')
 
     headers = requests.utils.default_headers()
     headers.update({
