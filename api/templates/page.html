@@ -14,7 +14,9 @@
         <ul>
         {% for l in links %}
         <li>
-            <a href="{{url_for('load_chosen_article', url=l.url) }}"">{{ l.display }}</a>
+            <a href="{{ url_for('display_page', display=l.display, filename=l.filename)}}" target="_blank">{{ l.display }}</a>
+            
+
         </li>
         {% endfor %}
         </ul>

@@ -11,8 +11,10 @@ from dotenv import load_dotenv
 from flask import (
     Flask,
     render_template,
+    render_template_string,
     request,
     redirect,
+    send_from_directory,
     send_file)
 
 from upload_to_s3 import (
@@ -109,7 +111,7 @@ def get_most_recently_saved_web_pages() -> dict:
         pages.append({'display': title, 'url': None})
     print(pages)
     return pages
-    
+
 
 def retrieve_searched_for_pages(input: str):
     """Get the relevant pages that have been searched for."""
@@ -120,9 +122,9 @@ def retrieve_searched_for_pages(input: str):
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     html_keys = filter_keys_by_type(keys, '.html')
     relevant_keys = filter_keys_by_website(html_keys, input)
-    download_data_files(s3_client, environ['S3_BUCKET'], relevant_keys, 'data')
+    download_data_files(s3_client, environ['S3_BUCKET'], relevant_keys, 'static')
     for key in relevant_keys:
-        pages.append({'display': key, 'url': f"data/{key.replace('/', '-')}"})
+        pages.append({'display': key, 'filename': f"{key.replace('/', '-')}"})
     return pages
 
 
@@ -179,23 +181,37 @@ def view_saved_pages():
 
     if request.method == "POST":
         input = request.form.get("input")
-        return redirect(f"/page/{input}")
+        return redirect(f"/result/{input}")
 
     url_links = get_most_recently_saved_web_pages()
     return render_template("saved_pages.html", links=url_links)
 
 
-@app.get("/page/<input>")
+@app.get("/result/<input>")
 def dynamic_page(input):
+    """Navigates to a page specific to what the user searched for."""
+
     url_links= retrieve_searched_for_pages(input)
     if len(url_links) == 0:
         return render_template("page.html")
     return render_template("page.html", input=input, links=url_links)
 
 
-@app.get("/<url>")
-def load_chosen_article(url):
-    return send_file(url)
+@app.get("/display-page")
+def display_page():
+    """Navigates to page of specific url with html embedded and download link."""
+
+    url = request.args['display']
+    html_filename = request.args['filename']
+
+    return render_template('display.html', url=url, html_filename=html_filename)
+
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """Allows user to download archived webpage."""
+
+    return send_from_directory('static', filename)
 
 
 if __name__ == '__main__':
