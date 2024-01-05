@@ -3,7 +3,7 @@
 from dotenv import load_dotenv
 from openai import OpenAI
 
-GPT_3_MODEL = 'gpt-3.5-turbo-16k'
+GPT_3_MODEL = 'gpt-3.5-turbo-1106'
 GPT_4_MODEL = 'gpt-4-1106-preview'
 
 
@@ -43,7 +43,6 @@ Your mission is to make each summary an invitation, sparking curiosity and encou
         ]
     )
 
-    print(completion.choices[0].message.content)
     return completion.choices[0].message.content
 
 
