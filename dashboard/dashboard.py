@@ -13,7 +13,8 @@ from dashboard_functions import (
     make_hourly_archive_tracker_line,
     make_archive_searchbar,
     make_popular_archives_bar,
-    make_daily_archive_tracker_line)
+    make_daily_archive_tracker_line,
+    make_timeframe_filter)
 
 
 def make_url_alias(url):
@@ -37,15 +38,19 @@ if __name__ == "__main__":
 
     st.title("Internet Archiver Dashboard")
 
-    make_hourly_archive_tracker_line(df)
+    selected_date_df = make_timeframe_filter(df)
+
+    selected_website_df = make_archive_searchbar(selected_date_df)
+
     make_daily_archive_tracker_line(df)
 
-    col1, col2 = st.columns(2)
+    col1, col2 = st.columns([3, 2])
 
     with col1:
-        # TODO Add filter to sort by timeframe
-        make_archive_searchbar(df)
+        if selected_website_df.shape[0] > 0:
+            make_hourly_archive_tracker_line(selected_website_df)
 
     with col2:
         # TODO Only display the 5 most popular websites
-        make_popular_archives_bar(df)
+        if selected_date_df.shape[0] > 0:
+            make_popular_archives_bar(selected_date_df)
