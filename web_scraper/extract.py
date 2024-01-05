@@ -1,11 +1,8 @@
 """Script used to extract from the RDS to get the required URLs."""
-import os
-from os import environ, path, mkdir
+from os import environ
 from time import perf_counter
-import requests
 
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
 from psycopg2 import connect, extensions, OperationalError
 
 
