@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+    <title>Result</title>
+</head>
+
+<body>
+    <div style="text-align: center;">
+
+
+        <h2>HTML saved</h2>
+        <h3>
+            {{ url }}
+        </h3>
+        <p>HTML File: <a href="{{ url_for('static', filename=html_filename) }}" target="_blank">{{ html_filename
+                }}</a></p>
+        </p>
+
+
+        <iframe class="embed-container" src="{{ url_for('static', filename=html_filename) }}" title="description"
+            width="80%" height="500"></iframe>
+    </div>
+
+
+</body>
+
+</html>

@@ -26,6 +26,25 @@ h1.display-1 {
 }
 
 
+h1.display-2 {
+    font-size: 50px;
+    /* text-align: center; */
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+    /* background-image: url('https: //media.giphy.com/media/YsUVWDh9buWzT8yLx0/giphy-downsized-large.gif'); */
+}
+
+
+h1.display-3 {
+    font-size: 30px;
+    /* text-align: center; */
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+    /* background-image: url('https: //media.giphy.com/media/YsUVWDh9buWzT8yLx0/giphy-downsized-large.gif'); */
+}
+
 
 h2,
 p {
@@ -90,4 +109,30 @@ button:hover {
 label {
     color: #253439;
     font-family: "IBM Plex Mono";
+}
+
+ul {
+    /* text-align: center; */
+    font-size: 16px;
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+}
+
+a {
+    /* text-align: center; */
+    font-size: 16px;
+    color: #253439;
+    /* background-color: #F40105; */
+    font-family: "IBM Plex Mono";
+}
+
+/* visited link */
+a:visited {
+  color: #8f5252;
+}
+
+/* mouse over link */
+a:hover {
+  color: #FF5454;
 }

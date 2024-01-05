@@ -13,7 +13,7 @@
     <body>
         <!-- HEADER COMPONENT -->
         <header class="container text-center">
-        <h1 class="display-1">Saved Pages</h1>
+        <h1 class="display-2">Saved Pages</h1>
 
         <div>
             <p>Search for web pages currently archived by users.
@@ -25,23 +25,20 @@
         <form method="POST">
             <label for="page_search">Search: </label>
             <input type="text" id="search_input" name="input" required>
-            <button type="submit">Save</button>
-            <!-- <input type="submit" value="Suggest" /> -->
+            <button type="submit">Enter</button>
+
         </form>
 
         <hr>
         
-        <h1>Recently Saved</h1>
+        <h1 class="display-3">Recently Saved</h2>
         <ul>
         {% for l in links %}
         <li>
             {{ l.display }}
-            {% if "author" in l %}
-                ({{ l.author }})
-            {% endif %}
         </li>
         {% endfor %}
-
+        </ul>
         </main>
     </body>
 </html>
