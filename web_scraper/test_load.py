@@ -1,8 +1,10 @@
 """Unit tests for the load.py file."""
 
 from pytest import raises
+from unittest.mock import MagicMock
+from botocore.exceptions import ClientError
 
-from load import sanitise_filename, extract_title, extract_domain
+from load import sanitise_filename, extract_title, extract_domain, upload_file_to_s3
 
 def test_sanitise_filename_works():
     """Tests that sanitise_filename successfully removes the correct characters."""
@@ -83,3 +85,49 @@ def test_extract_domain_invalid():
     test_input = "hello this shouldn't work.no"
 
     assert extract_domain(test_input) == None
+
+
+def test_upload_to_s3_successful():
+    """Tests that upload_to_s3 successfully uploads."""
+
+    s3_client_mock = MagicMock()
+
+    filename = "test.html"
+    bucket = "test_bucket"
+    key = "test_key"
+
+    upload_file_to_s3(s3_client_mock, filename, bucket, key)
+
+    s3_client_mock.upload_file.assert_called_once
+
+
+def test_upload_to_s3_client_error(capsys):
+    """Tests that upload_to_s3 produces a print statement when a ClientError occurs."""
+
+    s3_client_mock = MagicMock()
+    s3_client_mock.upload_file.side_effect = ClientError({}, "")
+
+    filename = "test.html"
+    bucket = "test_bucket"
+    key = "test_key"
+
+    upload_file_to_s3(s3_client_mock, filename, bucket, key)
+    
+    s3_client_mock.upload_file.assert_called_once
+    assert "Unable to upload file. Please check details of client!" in capsys.readouterr().out
+
+
+def test_upload_to_s3_client_error(capsys):
+    """Tests that upload_to_s3 produces a print statement when a TypeError occurs."""
+
+    s3_client_mock = MagicMock()
+    s3_client_mock.upload_file.side_effect = TypeError()
+
+    filename = "test.html"
+    bucket = "test_bucket"
+    key = "test_key"
+
+    upload_file_to_s3(s3_client_mock, filename, bucket, key)
+    
+    s3_client_mock.upload_file.assert_called_once
+    assert "Unable to upload file. Missing parameters required for upload!\n" in capsys.readouterr().out
