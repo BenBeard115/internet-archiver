@@ -9,7 +9,11 @@ import streamlit as st
 import altair as alt
 
 from extract import get_connection, get_all_data
-from dashboard_functions import make_hourly_archive_tracker_line, make_archive_searchbar, make_popular_archives_bar
+from dashboard_functions import (
+    make_hourly_archive_tracker_line,
+    make_archive_searchbar,
+    make_popular_archives_bar,
+    make_daily_archive_tracker_line)
 
 
 def make_url_alias(url):
@@ -34,6 +38,7 @@ if __name__ == "__main__":
     st.title("Internet Archiver Dashboard")
 
     make_hourly_archive_tracker_line(df)
+    make_daily_archive_tracker_line(df)
 
     col1, col2 = st.columns(2)
 

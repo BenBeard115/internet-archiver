@@ -3,7 +3,6 @@ from time import perf_counter
 from os import environ
 import logging
 
-from dotenv import load_dotenv
 from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
 import pandas as pd
 
