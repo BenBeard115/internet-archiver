@@ -4,6 +4,7 @@ from datetime import datetime
 import os
 from os import environ
 import requests
+import json
 
 from boto3 import client
 from bs4 import BeautifulSoup
@@ -40,10 +41,25 @@ from download_from_s3 import (
     format_object_key_titles
 )
 
+from chat_gpt_utils import (
+    generate_summary
+)
+
 
 load_dotenv()
 
 app = Flask(__name__)
+
+
+def get_html(url: str) -> str:
+    """Gets HTML content of given webpage."""
+
+    response = requests.get(url)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    return str(soup)
 
 
 def save_html_css(url: str) -> str:
@@ -124,7 +140,8 @@ def retrieve_searched_for_pages(input: str):
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     html_keys = filter_keys_by_type(keys, '.html')
     relevant_keys = filter_keys_by_website(html_keys, input)
-    download_data_files(s3_client, environ['S3_BUCKET'], relevant_keys, 'static')
+    download_data_files(
+        s3_client, environ['S3_BUCKET'], relevant_keys, 'static')
     for key in relevant_keys:
         pages.append({'display': key, 'filename': f"{key.replace('/', '-')}"})
     return pages
@@ -142,9 +159,16 @@ def index():
     """Main page of website."""
 
     status = request.args.get('status')
+    gpt_summary = request.args.get('summary')
+    response_data_serialised = request.args.get('response')
+    response_data = json.loads(response_data_serialised)
 
     if status == 'success':
-        return render_template('index.html', result='Save Successful!')
+        print(gpt_summary)
+        return render_template('index.html',
+                               result='Save successful!',
+                               gpt_summary=gpt_summary,
+                               response_data=response_data)
     elif status == 'failure':
         return render_template('index.html', result='Sorry, that webpage is not currently supported.')
     else:
@@ -164,15 +188,20 @@ def save():
         html_filename, css_filename = upload_to_s3(
             url, html_file_temp, css_data_temp)
 
+        gpt_summary = generate_summary(get_html(url))
+
         response_data = {
             'url': url,
             'html_filename': html_filename,
             'css_filename': css_filename,
-            'timestamp': timestamp
+            'timestamp': timestamp,
+            'gpt_summary': gpt_summary
         }
 
         upload_to_database(response_data)
-        return redirect('/?status=success')
+        response_data_serialised = json.dumps(response_data)
+
+        return redirect(f'/?status=success&summary={gpt_summary}&response={response_data_serialised}')
 
     except Exception as e:
         print(f"Error: {str(e)}")

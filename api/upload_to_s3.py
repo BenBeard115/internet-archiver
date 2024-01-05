@@ -42,10 +42,10 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
 
     try:
         s3_client.upload_file(filename, bucket, key)
-        print('Upload successful!')
+        print(f'Upload successful: {filename}')
 
     except Exception as e:
-        print('Unable to upload file. Please check details!')
+        print(f'Unable to upload {filename}. Please check details.')
 
 
 if __name__ == "__main__":
