@@ -86,7 +86,21 @@ def upload_to_rds(conn: extensions.connection, current_url: str) -> None:
                         SELECT url_id FROM {environ["SCRAPE_TABLE_NAME"]}
                         WHERE html LIKE '%{s3_object_key_matcher}%' AND css LIKE '%{s3_object_key_matcher}%'
                         """)
-            url_id = cur.fetchall()[0][0]
+            
+            try:
+                url_id = cur.fetchall()[0][0]
+            except IndexError:
+                cur.execute(f"""
+                        SELECT MAX(url_id) FROM {environ["SCRAPE_TABLE_NAME"]}
+                        """)
+                url_id = int(cur.fetchall()[0][0]) + 1
+                print(url_id)
+                
+                cur.execute(f"""
+                        INSERT INTO {environ["URL_TABLE_NAME"]}
+                        (url) VALUES
+                        ('{current_url}')
+                        """)
 
             cur.execute(f"""
                         INSERT INTO {environ["SCRAPE_TABLE_NAME"]}
