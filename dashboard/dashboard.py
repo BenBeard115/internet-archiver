@@ -47,13 +47,10 @@ def setup_page():
 
 if __name__ == "__main__":
     df = setup_database()
-
     setup_page()
 
     radio = make_date_radio()
-
     selected_date_df = make_date_filter(df, radio)
-
     selected_website_df = make_archive_searchbar(selected_date_df)
 
     make_daily_archive_tracker_line(df)
