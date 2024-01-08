@@ -120,10 +120,10 @@ def add_website(conn: extensions.connection, response_data: dict) -> None:
         ]),
         values=sql.SQL(',').join([
             sql.Literal(response_data["url_id"]),
-            sql.Literal(response_data["scrape_timestamp"]),
-            sql.Literal(response_data["html_filename"]),
-            sql.Literal(response_data["css_filename"]),
-            sql.Literal(response_data["screenshot_filename"]),
+            sql.Literal(response_data["scrape_at"]),
+            sql.Literal(response_data["html_s3_ref"]),
+            sql.Literal(response_data["css_s3_ref"]),
+            sql.Literal(response_data["screenshot_s3_ref"]),
             sql.Literal(response_data["is_human"])
         ])
     )
@@ -144,10 +144,10 @@ if __name__ == "__main__":
 
     example_response_data = {
         'url': "https://www.youtube.co.uk",
-        'html_filename': 'FAKE_HTML',
-        'css_filename': 'FAKE_CSS',
-        'screenshot_filename': 'FAKE_SCREENSHOT',
-        'scrape_timestamp': datetime(2023, 6, 22, 19, 10, 20),
+        'html_s3_ref': 'FAKE_HTML',
+        'css_s3_ref': 'FAKE_CSS',
+        'screenshot_s3_ref': 'FAKE_SCREENSHOT',
+        'scrape_at': datetime(2023, 6, 22, 19, 10, 20),
         'is_human': True,
         'summary': 'FAKE SUMMARY',
         'genre': 'media'
