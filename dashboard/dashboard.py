@@ -11,14 +11,13 @@ from PIL import Image
 
 from extract import get_connection, get_all_scrape_data, get_all_interaction_data
 from dashboard_functions import (
-    make_hourly_archive_tracker_line,
     make_archive_searchbar,
-    make_popular_archives_bar,
-    make_daily_archive_tracker_line,
     make_date_filter,
     make_date_radio,
     make_daily_visit_tracker_line,
-    make_daily_save_tracker_line)
+    make_daily_save_tracker_line,
+    make_hourly_visit_tracker_line,
+    make_hourly_save_tracker_line)
 
 
 def make_url_alias(url):
@@ -62,15 +61,16 @@ if __name__ == "__main__":
 
     # make_daily_archive_tracker_line(df)
 
-    # col1, col2 = st.columns([3, 2])
-
-    # with col1:
-    #     if selected_website_df.shape[0] > 0:
-    #         make_hourly_archive_tracker_line(selected_website_df)
+    col1, col2 = st.columns([3, 2])
 
     # with col2:
     #     if selected_date_df.shape[0] > 0:
     #         make_popular_archives_bar(selected_date_df)
 
-    # make_daily_visit_tracker_line(df)
-    # make_daily_save_tracker_line(df)
+    make_daily_visit_tracker_line(interaction_df)
+    make_daily_save_tracker_line(interaction_df)
+
+    with col1:
+        if selected_website_interaction_df.shape[0] > 0:
+            make_hourly_visit_tracker_line(selected_website_interaction_df)
+            make_hourly_save_tracker_line(selected_website_interaction_df)
