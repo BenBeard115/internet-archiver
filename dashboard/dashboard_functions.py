@@ -15,12 +15,12 @@ def make_date_radio():
     return radio
 
 
-def make_date_filter(df: pd.DataFrame, radio: str):
+def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radio: str):
     """Makes a date filter"""
-    min_date = min([min(df['scrape_at'].dt.date),
-                   min(df['interact_at'].dt.date)])
-    max_date = max([max(df['scrape_at'].dt.date),
-                   max(df['interact_at'].dt.date)])
+    min_date = min([min(scrape_df['scrape_at'].dt.date),
+                   min(interaction_df['interact_at'].dt.date)])
+    max_date = max([max(scrape_df['scrape_at'].dt.date),
+                   max(interaction_df['interact_at'].dt.date)])
 
     st.markdown(
         """
@@ -37,20 +37,21 @@ def make_date_filter(df: pd.DataFrame, radio: str):
         # Defaults to most recent data
         selected_date = st.sidebar.date_input(
             "Select a date", max_date, key='date_selector', min_value=min_date, max_value=max_date)
-        return df[(df['scrape_at'].dt.date == selected_date) & (df['interact_at'].dt.date == selected_date)]
+        return scrape_df[scrape_df['scrape_at'].dt.date == selected_date],  interaction_df[interaction_df['interact_at'].dt.date == selected_date]
 
     if radio == "Date Range":
         selected_date = st.sidebar.date_input(
             "Select a date", (min_date, max_date), key='date_selector', min_value=min_date, max_value=max_date)
 
         if len(selected_date) == 2:
-            return df[(df['scrape_at'].dt.date >= selected_date[0]) & (df['scrape_at'].dt.date <= selected_date[1]) & (
-                df['interact_at'].dt.date >= selected_date[0]) & (df['interact_at'].dt.date <= selected_date[1])]
+            return scrape_df[(scrape_df['scrape_at'].dt.date >= selected_date[0]) & (scrape_df['scrape_at'].dt.date <= selected_date[1])], interaction_df[(
+                interaction_df['interact_at'].dt.date >= selected_date[0]) & (interaction_df['interact_at'].dt.date <= selected_date[1])]
 
         else:
-            return df[(df['scrape_at'].dt.date == selected_date[0]) & (df['interact_at'].dt.date == selected_date[0])]
+            return scrape_df[(scrape_df['scrape_at'].dt.date == selected_date[0])], interaction_df[
+                (interaction_df['interact_at'].dt.date == selected_date[0])]
 
-    return df
+    return scrape_df, interaction_df
 
 
 def make_hourly_archive_tracker_line(data: pd.DataFrame):
@@ -108,6 +109,7 @@ def make_archive_searchbar(data: pd.DataFrame):
             url_search.lower(), case=False, na=False)]
 
         # Grammar on singular/plural
+        pluralise = ''
         if df_result_search.shape[0] != 1:
             pluralise = 's'
 

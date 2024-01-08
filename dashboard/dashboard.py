@@ -9,7 +9,7 @@ import streamlit as st
 import altair as alt
 from PIL import Image
 
-from extract import get_connection, get_all_data
+from extract import get_connection, get_all_scrape_data, get_all_interaction_data
 from dashboard_functions import (
     make_hourly_archive_tracker_line,
     make_archive_searchbar,
@@ -32,9 +32,12 @@ def setup_database():
     logging.getLogger().setLevel(logging.INFO)
 
     connection = get_connection(environ)
-    df = get_all_data(connection)
-    df["url_alias"] = df["url"].apply(make_url_alias)
-    return df
+    scrape_df = get_all_scrape_data(connection)
+    scrape_df["url_alias"] = scrape_df["url"].apply(make_url_alias)
+
+    interaction_df = get_all_interaction_data(connection)
+    interaction_df["url_alias"] = interaction_df["url"].apply(make_url_alias)
+    return scrape_df, interaction_df
 
 
 def setup_page():
@@ -48,13 +51,12 @@ def setup_page():
 
 
 if __name__ == "__main__":
-    df = setup_database()
+    scrape_df, interaction_df = setup_database()
     setup_page()
 
-    print(df)
-
     radio = make_date_radio()
-    selected_date_df = make_date_filter(df, radio)
+    selected_date_scrape_df, selected_date_interaction_df = make_date_filter(
+        scrape_df, interaction_df, radio)
     selected_website_df = make_archive_searchbar(selected_date_df)
 
     # make_daily_archive_tracker_line(df)

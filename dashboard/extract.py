@@ -26,18 +26,40 @@ def get_connection(environ: environ) -> extensions.connection:
         raise error
 
 
-def get_all_data(conn: extensions.connection):
+def get_all_scrape_data(conn: extensions.connection):
     """Extracts all data from the database."""
     extract_time = perf_counter()
     logging.info("Extracting data...")
     query = sql.SQL("""
                     SELECT 
-                        url, genre, scrape_at, is_human, type, interact_at
+                        url, genre, scrape_at, is_human
                     FROM 
                         url
                     JOIN 
                         page_scrape ON url.url_id = page_scrape.url_id
-                    JOIN 
+                    ;
+                    """)
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        rows = cur.fetchall()
+
+    logging.info("Scrape Data Extracted --- %ss.",
+                 round(perf_counter() - extract_time, 3))
+
+    return pd.DataFrame(rows, columns=["url", "genre", "scrape_at", "is_human"])
+
+
+def get_all_interaction_data(conn: extensions.connection):
+    """Extracts all data from the database."""
+    extract_time = perf_counter()
+    logging.info("Extracting data...")
+    query = sql.SQL("""
+                    SELECT 
+                        url, genre, interact_at, type
+                    FROM 
+                        url
+                    JOIN
                         user_interaction ON url.url_id = user_interaction.url_id
                     JOIN
                         interaction_type ON interaction_type.type_id = user_interaction.type_id
@@ -51,4 +73,4 @@ def get_all_data(conn: extensions.connection):
     logging.info("Data Extracted --- %ss.",
                  round(perf_counter() - extract_time, 3))
 
-    return pd.DataFrame(rows, columns=["url", "genre", "scrape_at", "is_human", "type", "interact_at"])
+    return pd.DataFrame(rows, columns=["url", "genre", "interact_at", "type"])
