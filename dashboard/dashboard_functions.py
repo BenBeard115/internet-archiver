@@ -72,6 +72,28 @@ def make_daily_archive_tracker_line(data: pd.DataFrame):
     st.altair_chart(archived, use_container_width=True)
 
 
+def make_daily_visit_tracker_line(data: pd.DataFrame):
+    """Makes an daily archive tracker."""
+    st.subheader("Daily Archives Visited")
+
+    archived = alt.Chart(data).mark_line().encode(
+        x=alt.X("monthdate(at):O").title("Time"),
+        y=alt.Y("visit_count:Q").title("Archives Visited")).configure_line(color="#d15353")
+
+    st.altair_chart(archived, use_container_width=True)
+
+
+def make_daily_save_tracker_line(data: pd.DataFrame):
+    """Makes an daily archive tracker."""
+    st.subheader("Daily Archives Saved")
+
+    archived = alt.Chart(data).mark_line().encode(
+        x=alt.X("monthdate(at):O").title("Time"),
+        y=alt.Y("save_count:Q").title("Archives Saved")).configure_line(color="#d15353")
+
+    st.altair_chart(archived, use_container_width=True)
+
+
 def make_archive_searchbar(data: pd.DataFrame):
     """Makes a searchbar that returns the number of archives of a website and the archive times."""
     url_search = st.sidebar.text_input(

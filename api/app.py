@@ -27,7 +27,8 @@ from upload_to_s3 import (
 
 from upload_to_database import (
     add_url,
-    add_website
+    add_website,
+    add_interaction
 )
 
 from connect import get_connection
@@ -146,11 +147,17 @@ def retrieve_searched_for_pages(input: str):
     return pages
 
 
-def upload_to_database(response_data: dict) -> None:
+def upload_scrape_to_database(response_data: dict) -> None:
     """Uploads website information to the database."""
     connection = get_connection(environ)
     add_url(connection, response_data)
     add_website(connection, response_data)
+
+
+def upload_interaction_to_database(interaction_data: dict):
+    connection = get_connection(environ)
+    add_url(connection, interaction_data)
+    add_interaction(connection, interaction_data)
 
 
 @app.route('/')
@@ -195,7 +202,7 @@ def save():
             'gpt_summary': gpt_summary
         }
 
-        upload_to_database(response_data)
+        upload_scrape_to_database(response_data)
 
         return redirect(f'/?status=success&summary={gpt_summary}')
 

@@ -31,20 +31,18 @@ def get_all_data(conn: extensions.connection):
     extract_time = perf_counter()
     logging.info("Extracting data...")
     query = sql.SQL("""
-                    SELECT {fields}
-                    FROM {table_1}
-                    JOIN {table_2} ON {table_1}.url_id = {table_2}.url_id
+                    SELECT 
+                        url, genre, scrape_at, is_human, type, interact_at
+                    FROM 
+                        url
+                    JOIN 
+                        page_scrape ON url.url_id = page_scrape.url_id
+                    JOIN 
+                        user_interaction ON url.url_id = user_interaction.url_id
+                    JOIN
+                        interaction_type ON interaction_type.type_id = user_interaction.type_id
                     ;
-                    """).format(
-        table_1=sql.Identifier('page_scrape'),
-        table_2=sql.Identifier('url'),
-        fields=sql.SQL(',').join([
-            sql.Identifier('url'),
-            sql.Identifier('at'),
-            sql.Identifier('html'),
-            sql.Identifier('css')
-        ])
-    )
+                    """)
 
     with conn.cursor() as cur:
         cur.execute(query)
@@ -53,4 +51,4 @@ def get_all_data(conn: extensions.connection):
     logging.info("Data Extracted --- %ss.",
                  round(perf_counter() - extract_time, 3))
 
-    return pd.DataFrame(rows, columns=["url", "at", "html", "css"])
+    return pd.DataFrame(rows, columns=["url", "genre", "scrape_at", "is_human", "type", "interact_at"])

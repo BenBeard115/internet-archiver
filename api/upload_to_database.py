@@ -9,26 +9,46 @@ from psycopg2 import sql, extensions
 
 from connect import get_connection
 
+VISIT_ID = 1
+SAVE_ID = 2
 
-def add_to_count(conn: extensions.connection, url: str, count_type: str) -> None:
-    """Adds 1 to a url's visit or save count"""
+
+def add_interaction(conn: extensions.connection, interaction_data: dict) -> None:
+    """Adds interactions to the interactions database."""
     update_time = perf_counter()
 
-    update_query = sql.SQL("""UPDATE {table}
-                            SET {field} = {field} + 1
-                            WHERE {url} = %s
-                          ;
-                          """).format(
-        table=sql.Identifier('url'),
-        field=sql.Identifier(count_type),
-        url=sql.Identifier('url')
+    if interaction_data.get("type") == 'visit':
+        type_id = VISIT_ID
+
+    elif interaction_data.get("type_id") == 'save':
+        type_id = SAVE_ID
+
+    else:
+        raise ValueError("Invalid type value")
+
+    interaction_query = sql.SQL("""
+                    INSERT INTO {table} 
+                        ({fields})
+                    VALUES
+                        ({values});""").format(
+        table=sql.Identifier('user_interaction'),
+        fields=sql.SQL(',').join([
+            sql.Identifier('url_id'),
+            sql.Identifier('type_id'),
+            sql.Identifier('interact_at')
+        ]),
+        values=sql.SQL(',').join([
+            sql.Literal(interaction_data["url_id"]),
+            sql.Literal(type_id),
+            sql.Literal(interaction_data.get("interact_at"))
+        ])
     )
 
     with conn.cursor() as cur:
-        cur.execute(update_query, (url,))
+        cur.execute(interaction_query)
         conn.commit()
 
-    logging.info("Visit Uploaded --- %ss.",
+    logging.info("Interaction Uploaded --- %ss.",
                  round(perf_counter() - update_time, 3))
 
 
@@ -60,14 +80,13 @@ def add_url(conn: extensions.connection, response_data: dict) -> None:
                 table=sql.Identifier('url'),
                 fields=sql.SQL(',').join([
                     sql.Identifier('url'),
-                    sql.Identifier('visit_count'),
-                    sql.Identifier('summary')
+                    sql.Identifier('summary'),
+                    sql.Identifier('genre')
                 ]),
                 values=sql.SQL(',').join([
                     sql.Literal(response_data["url"]),
-                    sql.Literal(0),
-                    sql.Literal(0),
-                    sql.Literal(response_data["summary"])
+                    sql.Literal(response_data.get("summary")),
+                    sql.Literal(response_data.get("genre"))
                 ])
             )
             cur.execute(insert_query)
@@ -93,15 +112,19 @@ def add_website(conn: extensions.connection, response_data: dict) -> None:
         table=sql.Identifier('page_scrape'),
         fields=sql.SQL(',').join([
             sql.Identifier('url_id'),
-            sql.Identifier('at'),
-            sql.Identifier('html'),
-            sql.Identifier('css')
+            sql.Identifier('scrape_at'),
+            sql.Identifier('html_s3_ref'),
+            sql.Identifier('css_s3_ref'),
+            sql.Identifier('screenshot_s3_ref'),
+            sql.Identifier('is_human')
         ]),
         values=sql.SQL(',').join([
             sql.Literal(response_data["url_id"]),
-            sql.Literal(response_data["timestamp"]),
+            sql.Literal(response_data["scrape_timestamp"]),
             sql.Literal(response_data["html_filename"]),
-            sql.Literal(response_data["css_filename"])
+            sql.Literal(response_data["css_filename"]),
+            sql.Literal(response_data["screenshot_filename"]),
+            sql.Literal(response_data["is_human"])
         ])
     )
 
@@ -123,9 +146,21 @@ if __name__ == "__main__":
         'url': "https://www.youtube.co.uk",
         'html_filename': 'FAKE_HTML',
         'css_filename': 'FAKE_CSS',
-        'timestamp': datetime(2023, 6, 22, 19, 10, 20)
+        'screenshot_filename': 'FAKE_SCREENSHOT',
+        'scrape_timestamp': datetime(2023, 6, 22, 19, 10, 20),
+        'is_human': True,
+        'summary': 'FAKE SUMMARY',
+        'genre': 'media'
     }
 
     add_url(connection, example_response_data)
     add_website(connection, example_response_data)
-    add_to_count(connection, example_response_data["url"], "visit_count")
+
+    example_interaction_data = {
+        'url': "https://www.youtube.co.uk",
+        'type': 'visit',
+        'interact_at': datetime(2023, 9, 22, 19, 10, 20)
+    }
+
+    add_url(connection, example_interaction_data)
+    add_interaction(connection, example_interaction_data)
