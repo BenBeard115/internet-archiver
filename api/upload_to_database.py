@@ -10,15 +10,41 @@ from psycopg2 import sql, extensions
 from connect import get_connection
 
 
+def add_visit(conn: extensions.connection, url: str) -> None:
+    """Adds 1 to a url's visit_count"""
+    update_time = perf_counter()
+
+    visit_query = sql.SQL("""UPDATE {table} 
+                            SET {field} = {field} + 1
+                            WHERE {url} = %s
+                          ;
+                          """).format(
+        table=sql.Identifier('url'),
+        field=sql.Identifier('visit_count'),
+        url=sql.Identifier('url')
+    )
+
+    with conn.cursor() as cur:
+        cur.execute(visit_query, (url,))
+        conn.commit()
+
+    logging.info("Visit Uploaded --- %ss.",
+                 round(perf_counter() - update_time, 3))
+
+
 def add_url(conn: extensions.connection, response_data: dict) -> None:
     """Adds a website's url to the database and extracts the url_id."""
     # query to search for the corresponding url_id
     upload_time = perf_counter()
 
-    search_query = sql.SQL("SELECT {field} FROM {table} WHERE {pkey} = %s").format(
+    search_query = sql.SQL("""
+                           SELECT {field} 
+                            FROM {table} 
+                            WHERE {url} = %s
+                           """).format(
         field=sql.Identifier('url_id'),
         table=sql.Identifier('url'),
-        pkey=sql.Identifier('url'))
+        url=sql.Identifier('url'))
 
     with conn.cursor() as cur:
         cur.execute(search_query, (response_data["url"],))
@@ -28,12 +54,20 @@ def add_url(conn: extensions.connection, response_data: dict) -> None:
             # inserting url to url table
             insert_query = sql.SQL("""
                     INSERT INTO {table} 
-                        ({field})
+                        ({fields})
                     VALUES
-                        ({value});""").format(
+                        ({values});""").format(
                 table=sql.Identifier('url'),
-                field=sql.Identifier('url'),
-                value=sql.Literal(response_data["url"])
+                fields=sql.SQL(',').join([
+                    sql.Identifier('url'),
+                    sql.Identifier('visit_count'),
+                    sql.Identifier('summary')
+                ]),
+                values=sql.SQL(',').join([
+                    sql.Literal(response_data["url"]),
+                    sql.Literal(response_data["visit_count"]),
+                    sql.Literal(response_data["summary"])
+                ])
             )
             cur.execute(insert_query)
             cur.execute(search_query, (response_data["url"],))
@@ -82,7 +116,7 @@ if __name__ == "__main__":
     load_dotenv()
     logging.getLogger().setLevel(logging.INFO)
 
-    connection = get_connection()
+    connection = get_connection(environ)
 
     example_response_data = {
         'url': "https://www.youtube.co.uk",
@@ -93,3 +127,4 @@ if __name__ == "__main__":
 
     add_url(connection, example_response_data)
     add_website(connection, example_response_data)
+    add_visit(connection, example_response_data["url"])
