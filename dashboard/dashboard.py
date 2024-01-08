@@ -51,21 +51,23 @@ if __name__ == "__main__":
     df = setup_database()
     setup_page()
 
+    print(df)
+
     radio = make_date_radio()
     selected_date_df = make_date_filter(df, radio)
-    selected_website_df = make_archive_searchbar(selected_date_df)
+    # selected_website_df = make_archive_searchbar(selected_date_df)
 
-    make_daily_archive_tracker_line(df)
+    # make_daily_archive_tracker_line(df)
 
-    col1, col2 = st.columns([3, 2])
+    # col1, col2 = st.columns([3, 2])
 
-    with col1:
-        if selected_website_df.shape[0] > 0:
-            make_hourly_archive_tracker_line(selected_website_df)
+    # with col1:
+    #     if selected_website_df.shape[0] > 0:
+    #         make_hourly_archive_tracker_line(selected_website_df)
 
-    with col2:
-        if selected_date_df.shape[0] > 0:
-            make_popular_archives_bar(selected_date_df)
+    # with col2:
+    #     if selected_date_df.shape[0] > 0:
+    #         make_popular_archives_bar(selected_date_df)
 
-    make_daily_visit_tracker_line(df)
-    make_daily_save_tracker_line(df)
+    # make_daily_visit_tracker_line(df)
+    # make_daily_save_tracker_line(df)

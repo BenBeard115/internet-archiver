@@ -17,8 +17,10 @@ def make_date_radio():
 
 def make_date_filter(df: pd.DataFrame, radio: str):
     """Makes a date filter"""
-    min_date = min(df['at'].dt.date)
-    max_date = max(df['at'].dt.date)
+    min_date = min([min(df['scrape_at'].dt.date),
+                   min(df['interact_at'].dt.date)])
+    max_date = max([max(df['scrape_at'].dt.date),
+                   max(df['interact_at'].dt.date)])
 
     st.markdown(
         """
@@ -35,17 +37,18 @@ def make_date_filter(df: pd.DataFrame, radio: str):
         # Defaults to most recent data
         selected_date = st.sidebar.date_input(
             "Select a date", max_date, key='date_selector', min_value=min_date, max_value=max_date)
-        return df[df['at'].dt.date == selected_date]
+        return df[(df['scrape_at'].dt.date == selected_date) & (df['interact_at'].dt.date == selected_date)]
 
     if radio == "Date Range":
         selected_date = st.sidebar.date_input(
             "Select a date", (min_date, max_date), key='date_selector', min_value=min_date, max_value=max_date)
 
         if len(selected_date) == 2:
-            return df[(df['at'].dt.date >= selected_date[0]) & (df['at'].dt.date <= selected_date[1])]
+            return df[(df['scrape_at'].dt.date >= selected_date[0]) & (df['scrape_at'].dt.date <= selected_date[1]) & (
+                df['interact_at'].dt.date >= selected_date[0]) & (df['interact_at'].dt.date <= selected_date[1])]
 
         else:
-            return df[df['at'].dt.date == selected_date[0]]
+            return df[(df['scrape_at'].dt.date == selected_date[0]) & (df['interact_at'].dt.date == selected_date[0])]
 
     return df
 
