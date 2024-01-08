@@ -160,15 +160,14 @@ def index():
 
     status = request.args.get('status')
     gpt_summary = request.args.get('summary')
-    response_data_serialised = request.args.get('response')
-    response_data = json.loads(response_data_serialised)
 
     if status == 'success':
         print(gpt_summary)
+
         return render_template('index.html',
                                result='Save successful!',
-                               gpt_summary=gpt_summary,
-                               response_data=response_data)
+                               gpt_summary=gpt_summary
+                               )
     elif status == 'failure':
         return render_template('index.html', result='Sorry, that webpage is not currently supported.')
     else:
@@ -199,9 +198,8 @@ def save():
         }
 
         upload_to_database(response_data)
-        response_data_serialised = json.dumps(response_data)
 
-        return redirect(f'/?status=success&summary={gpt_summary}&response={response_data_serialised}')
+        return redirect(f'/?status=success&summary={gpt_summary}')
 
     except Exception as e:
         print(f"Error: {str(e)}")
