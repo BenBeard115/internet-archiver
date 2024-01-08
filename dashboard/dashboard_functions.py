@@ -32,10 +32,9 @@ def make_date_filter(df: pd.DataFrame, radio: str):
         unsafe_allow_html=True,)
 
     if radio == "Singular Date":
-        today = datetime.today()
-        # Defaults to today
+        # Defaults to most recent data
         selected_date = st.sidebar.date_input(
-            "Select a date", today, key='date_selector', min_value=min_date, max_value=max_date)
+            "Select a date", max_date, key='date_selector', min_value=min_date, max_value=max_date)
         return df[df['at'].dt.date == selected_date]
 
     if radio == "Date Range":
