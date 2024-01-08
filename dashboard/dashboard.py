@@ -64,10 +64,9 @@ if __name__ == "__main__":
     if selected_website_interaction_df.shape[0] > 0:
         make_hourly_tracker_line(selected_website_interaction_df)
 
-    col1, col2 = st.columns([5, 4])
     if selected_date_interaction_df.shape[0] > 0:
-        with col1:
-            make_popular_visit_bar(selected_date_interaction_df)
+        make_popular_visit_bar(selected_date_interaction_df)
 
+        col1, col2 = st.columns(2)
         with col2:
             make_popular_save_bar(selected_date_interaction_df)

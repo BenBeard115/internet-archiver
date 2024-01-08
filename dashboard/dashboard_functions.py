@@ -132,31 +132,21 @@ def make_daily_tracker_line(data: pd.DataFrame):
     st.altair_chart(archived, use_container_width=True)
 
 
-def make_daily_save_tracker_line(data: pd.DataFrame):
-    """Makes an daily archive tracker."""
-    st.subheader("Daily Archives Saved")
-    data = data[data["type"] == 'save']
-
-    archived = alt.Chart(data).mark_line().encode(
-        x=alt.X("monthdate(interact_at):O").title("Time"),
-        y=alt.Y("save_count:Q").title("Archives Saved")).configure_line(color="#d15353")
-
-    st.altair_chart(archived, use_container_width=True)
-
-
 def make_popular_visit_bar(data: pd.DataFrame):
     """Makes a bar chart for the most popular sites to archive."""
     st.subheader("Popular Archives")
     # TODO Add text to each bar of the number of visits (only possible when visits added)
     # Gets the 5 most popular websites
-    data = data[data["type"] == 'visit']
-    data = data.groupby(['url_alias'])['url_alias'].count().reset_index(
+    data = data.groupby(['url_alias', 'type'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(5)
 
-    archives = alt.Chart(data).mark_bar().encode(x=alt.X("Count").title("Visit Count"),
-                                                 y=alt.Y("url_alias").title(
-                                                     "Website").sort("-y")).configure_bar(
-                                                         color="#d15353").properties(height=350)
+    archives = alt.Chart(data).mark_bar().encode(
+        x=alt.X("Count").title(
+            "Count"),
+        y=alt.Y("type").title(
+            "Type"),
+        color="type",
+        row=alt.Row('url_alias')).properties(height=70)
 
     st.altair_chart(archives, use_container_width=True)
 

@@ -157,8 +157,8 @@ if __name__ == "__main__":
     # add_website(connection, example_response_data)
 
     example_interaction_data = {
-        'url': "https://www.youtube.co.uk",
-        'type': 'visit',
+        'url': "https://www.bbc.co.uk",
+        'type': 'save',
         'interact_at': datetime(2023, 9, 26, 18, 10, 20)
     }
 
