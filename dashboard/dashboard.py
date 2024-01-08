@@ -16,7 +16,9 @@ from dashboard_functions import (
     make_popular_archives_bar,
     make_daily_archive_tracker_line,
     make_date_filter,
-    make_date_radio)
+    make_date_radio,
+    make_daily_visit_tracker_line,
+    make_daily_save_tracker_line)
 
 
 def make_url_alias(url):
@@ -64,3 +66,6 @@ if __name__ == "__main__":
     with col2:
         if selected_date_df.shape[0] > 0:
             make_popular_archives_bar(selected_date_df)
+
+    make_daily_visit_tracker_line(df)
+    make_daily_save_tracker_line(df)
