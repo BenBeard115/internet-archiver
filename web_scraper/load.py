@@ -45,18 +45,13 @@ def extract_title(current_url: str) -> str:
 def extract_domain(current_url: str) -> str:
     """Extracts domain name used for s3_filename from given url."""
 
-    regex_pattern = r'(http[s]?:\/\/)?[^\s(["<,>]*\.[\w]+[^\s.[",><]*'
+    regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
 
-    match = re.match(regex_pattern, current_url)
+    match = re.search(regex_pattern, current_url)
     if not match:
         return None
-
-    domain = match.group(0).replace("https://", "").replace("http://", "")
-
-    while "/" in domain:
-        domain = domain.replace("/", " ")
-
-    return domain
+    
+    return match.group(2) + match.group(3)
 
 
 def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -> None:
@@ -164,9 +159,9 @@ if __name__ == "__main__":
     client = client('s3',
                        aws_access_key_id=environ["AWS_ACCESS_KEY_ID"],
                        aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
-    print(f"Connected to S3 --- {startup - perf_counter()}s.")
+    print(f"Connected to S3 --- {perf_counter() - startup}s.")
 
-    list_of_urls = ["https://www.youtube.co.uk", "https://www.google.co.uk"]
+    list_of_urls = ["https://eveninguniverse.com/fiction/the-meteor-generation.html", "https://www.youtube.co.uk", "https://www.youtube.co.uk/"]
 
     download = perf_counter()
     print("Uploading HTML and CSS data to S3...")
@@ -178,4 +173,4 @@ if __name__ == "__main__":
 
     shutil.rmtree("static/")
 
-    print(f"Data uploaded --- {download - perf_counter()}s.")
+    print(f"Data uploaded --- {perf_counter() - download}s.")
