@@ -57,7 +57,8 @@ if __name__ == "__main__":
     radio = make_date_radio()
     selected_date_scrape_df, selected_date_interaction_df = make_date_filter(
         scrape_df, interaction_df, radio)
-    selected_website_df = make_archive_searchbar(selected_date_df)
+    selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
+        selected_date_scrape_df, selected_date_interaction_df)
 
     # make_daily_archive_tracker_line(df)
 

@@ -116,12 +116,23 @@ def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame
         if scrape_df_result_search.shape[0] != 1:
             pluralise = 's'
 
-        st.sidebar.write("Found {} Archived Record{}".format(
+        st.sidebar.write("Found {} Archived Record{}.".format(
             str(scrape_df_result_search.shape[0]), pluralise))
 
-        pluralise = ''
-        if interaction_df_result_search[interaction_df_result_search["type"] == 'visit'].shape[0] != 1:
-            pluralise = 's'
+        visit_pluralise = ''
+        visit_count = interaction_df_result_search[interaction_df_result_search["type"]
+                                                   == 'visit'].shape[0]
+        if visit_count != 1:
+            visit_pluralise = 's'
+
+        save_pluralise = ''
+        save_count = interaction_df_result_search[interaction_df_result_search["type"]
+                                                  == 'save'].shape[0]
+        if save_count != 1:
+            save_pluralise = 's'
+
+        st.sidebar.write("Url Visited {} Time{} and Saved {} Time{}.".format(
+            str(visit_count), visit_pluralise, str(save_count), save_pluralise))
 
         return scrape_df_result_search, interaction_df_result_search
     return scrape_df, interaction_df
