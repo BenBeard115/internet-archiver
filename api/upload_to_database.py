@@ -10,22 +10,22 @@ from psycopg2 import sql, extensions
 from connect import get_connection
 
 
-def add_visit(conn: extensions.connection, url: str) -> None:
-    """Adds 1 to a url's visit_count"""
+def add_to_count(conn: extensions.connection, url: str, count_type: str) -> None:
+    """Adds 1 to a url's visit or save count"""
     update_time = perf_counter()
 
-    visit_query = sql.SQL("""UPDATE {table}
+    update_query = sql.SQL("""UPDATE {table}
                             SET {field} = {field} + 1
                             WHERE {url} = %s
                           ;
                           """).format(
         table=sql.Identifier('url'),
-        field=sql.Identifier('visit_count'),
+        field=sql.Identifier(count_type),
         url=sql.Identifier('url')
     )
 
     with conn.cursor() as cur:
-        cur.execute(visit_query, (url,))
+        cur.execute(update_query, (url,))
         conn.commit()
 
     logging.info("Visit Uploaded --- %ss.",
@@ -127,4 +127,4 @@ if __name__ == "__main__":
 
     add_url(connection, example_response_data)
     add_website(connection, example_response_data)
-    add_visit(connection, example_response_data["url"])
+    add_to_count(connection, example_response_data["url"], "visit_count")
