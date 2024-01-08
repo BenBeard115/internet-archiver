@@ -14,7 +14,7 @@ def add_visit(conn: extensions.connection, url: str) -> None:
     """Adds 1 to a url's visit_count"""
     update_time = perf_counter()
 
-    visit_query = sql.SQL("""UPDATE {table} 
+    visit_query = sql.SQL("""UPDATE {table}
                             SET {field} = {field} + 1
                             WHERE {url} = %s
                           ;
