@@ -6,6 +6,7 @@ CREATE TABLE url (
     url_id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
     visit_count INT,
+    save_count INT,
     summary TEXT
 );
 
