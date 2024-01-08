@@ -2,14 +2,14 @@
 
 from time import perf_counter
 from os import environ
-import shutil
-import requests
+from datetime import datetime
 
 from dotenv import load_dotenv
 from boto3 import client
+from html2image import Html2Image
 
 from extract import get_database_connection, load_all_data
-from load import save_html_css, upload_to_s3, upload_to_rds
+from load import upload_to_rds, get_soup, extract_title, extract_domain, process_html_content, process_screenshot, process_css_content
 
 
 if __name__ == "__main__":
@@ -22,30 +22,29 @@ if __name__ == "__main__":
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
 
+    hti = Html2Image()
+
     connecting_time = perf_counter()
     print("Connecting to S3...")
-    s3_client = client("s3",
+    client = client('s3',
                        aws_access_key_id=environ["AWS_ACCESS_KEY_ID"],
                        aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
     print(f"Connected to S3 --- {perf_counter() - connecting_time}s.")
 
     download = perf_counter()
-    print("Scraping and uploading HTML and CSS data to S3 and RDS...")
+    print("Uploading HTML and image data to S3...")
     for url in list_of_urls:
 
-        try:
-            html_file_name, css_file_name = save_html_css(url)
-        except requests.exceptions.ReadTimeout:
-            continue
+        soup = get_soup(url)
+        title = extract_title(url)
+        domain = extract_domain(url)
+        timestamp = datetime.utcnow().isoformat()
+        html_file_name = process_html_content(soup, domain, title, timestamp, client)
+        img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
+        css_file_name = process_css_content(soup, domain, title, timestamp, client)
 
-        # to see which files are being blocked on AWS
-        print(html_file_name)
-        print(css_file_name)
-        upload_to_s3(s3_client, url,
-                     html_file_name, css_file_name)
-        upload_to_rds(connection, url)
-
-    shutil.rmtree("static/")
+        if html_file_name and img_file_name and css_file_name:
+            upload_to_rds(connection, html_file_name, img_file_name, css_file_name, timestamp)
 
     print(f"Data uploaded --- {perf_counter() - download}s.")
     print(f"Pipeline complete --- {perf_counter() - startup}s.")
