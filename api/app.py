@@ -124,9 +124,8 @@ def retrieve_searched_for_pages(input: str):
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     html_keys = filter_keys_by_type(keys, '.html')
     relevant_keys = filter_keys_by_website(html_keys, input)
-    download_data_files(s3_client, environ['S3_BUCKET'], relevant_keys, 'static')
     for key in relevant_keys:
-        pages.append({'display': key, 'filename': f"{key.replace('/', '-')}"})
+        pages.append({'display': key, 'filename': key"})
     return pages
 
 
@@ -199,6 +198,8 @@ def dynamic_page(input):
     if len(url_links) == 0:
         return render_template("search_error.html", input=input)
     return render_template("result.html", input=input, links=url_links)
+
+def get_html_content(input)
 
 
 @app.get("/display-page")
