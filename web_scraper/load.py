@@ -1,7 +1,7 @@
 """Script used to insert the re-scraped HTML and CSS files into the S3 bucket."""
 
 from datetime import datetime
-from os import environ, path, getcwd
+from os import environ, path, getcwd, mkdir
 from time import perf_counter
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -52,6 +52,10 @@ def extract_domain(current_url: str) -> str:
         return None
 
     domain = match.group(0).replace("https://", "").replace("http://", "")
+
+    while "/" in domain:
+        domain = domain.replace("/", " ")
+
     return domain
 
 
@@ -86,7 +90,11 @@ def upload_to_rds(conn: extensions.connection, current_url: str) -> None:
                         SELECT url_id FROM {environ["SCRAPE_TABLE_NAME"]}
                         WHERE html LIKE '%{s3_object_key_matcher}%' AND css LIKE '%{s3_object_key_matcher}%'
                         """)
-            url_id = cur.fetchall()[0][0]
+            
+            try:
+                url_id = cur.fetchall()[0][0]
+            except IndexError:
+                return
 
             cur.execute(f"""
                         INSERT INTO {environ["SCRAPE_TABLE_NAME"]}
@@ -120,6 +128,9 @@ def upload_to_s3(s3_client: client, current_url: str, html_filename_temp: str,
 
 def save_html_css(current_url: str) -> str:
     """Scrape HTML and CSS from a given URL and save them."""
+
+    if not path.exists('static'):
+        mkdir('static')
 
     headers = requests.utils.default_headers()
     headers.update({

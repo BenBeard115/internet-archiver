@@ -1,11 +1,8 @@
 """Script used to extract from the RDS to get the required URLs."""
-import os
-from os import environ, path, mkdir
+from os import environ
 from time import perf_counter
-import requests
 
 from dotenv import load_dotenv
-from bs4 import BeautifulSoup
 from psycopg2 import connect, extensions, OperationalError
 
 
@@ -46,47 +43,6 @@ def convert_to_set(urls: list[str]) -> set:
     return set(urls)
 
 
-def save_html_css(url: str) -> None:
-    """Scrape HTML and CSS from a given URL and save them."""
-
-    if not path.exists('static'):
-        mkdir('static')
-
-    headers = requests.utils.default_headers()
-    headers.update({
-    'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',})
-
-    try:
-        response = requests.get(url, headers=headers, timeout=30)
-    except requests.exceptions.ReadTimeout:
-        return
-
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    title = soup.title.text.strip()
-
-    html_content = str(soup)
-    css_content = '\n'.join([style.text for style in soup.find_all('style')])
-
-    html_filename = f"{title}_html.html"
-    css_filename = f"{title}_css.css"
-
-    static_folder = os.path.join(os.getcwd(), 'static')
-
-    with open(os.path.join(static_folder, html_filename), 'w', encoding='utf-8') as html_file:
-        html_file.write(html_content)
-
-    with open(os.path.join(static_folder, css_filename), 'w', encoding='utf-8') as css_file:
-        css_file.write(css_content)
-
-
-def scrape_all_urls(urls: set) -> None:
-    """Scrapes the data for all the unique urls in the database."""
-
-    for url in urls:
-        save_html_css(url)
-
-
 if __name__ == "__main__":
 
     load_dotenv()
@@ -96,10 +52,5 @@ if __name__ == "__main__":
     connection = get_database_connection()
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
-
-    scraper = perf_counter()
-    print("Scraping websites...")
-    scrape_all_urls(list_of_urls)
-    print(f"Websites scraped --- {perf_counter() - scraper}s.")
 
     print(f"Extract phase complete --- {perf_counter() - startup}s.")
