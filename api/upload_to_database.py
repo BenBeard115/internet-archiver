@@ -143,11 +143,11 @@ if __name__ == "__main__":
     connection = get_connection(environ)
 
     example_response_data = {
-        'url': "https://www.youtube.co.uk",
+        'url': "https://www.bbc.co.uk",
         'html_filename': 'FAKE_HTML',
         'css_filename': 'FAKE_CSS',
         'screenshot_filename': 'FAKE_SCREENSHOT',
-        'scrape_timestamp': datetime(2023, 6, 22, 19, 10, 20),
+        'scrape_timestamp': datetime(2024, 6, 22, 19, 10, 20),
         'is_human': True,
         'summary': 'FAKE SUMMARY',
         'genre': 'media'
