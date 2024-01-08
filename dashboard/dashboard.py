@@ -17,7 +17,9 @@ from dashboard_functions import (
     make_daily_visit_tracker_line,
     make_daily_save_tracker_line,
     make_hourly_visit_tracker_line,
-    make_hourly_save_tracker_line)
+    make_hourly_save_tracker_line,
+    make_popular_visit_bar,
+    make_popular_save_bar)
 
 
 def make_url_alias(url):
@@ -61,7 +63,7 @@ if __name__ == "__main__":
 
     # make_daily_archive_tracker_line(df)
 
-    col1, col2 = st.columns([3, 2])
+    col1, col2 = st.columns([5, 4])
 
     # with col2:
     #     if selected_date_df.shape[0] > 0:
@@ -74,3 +76,8 @@ if __name__ == "__main__":
         if selected_website_interaction_df.shape[0] > 0:
             make_hourly_visit_tracker_line(selected_website_interaction_df)
             make_hourly_save_tracker_line(selected_website_interaction_df)
+
+    with col2:
+        if selected_date_interaction_df.shape[0] > 0:
+            make_popular_visit_bar(selected_date_interaction_df)
+            make_popular_save_bar(selected_date_interaction_df)
