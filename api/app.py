@@ -226,7 +226,8 @@ def save():
             'screenshot_s3_ref': img_object_key_s3,
             'scrape_at': timestamp,
             'summary': gpt_summary,
-            'is_human': True
+            'is_human': True,
+            'genre': ''
         }
 
         upload_scrape_to_database(response_data)
