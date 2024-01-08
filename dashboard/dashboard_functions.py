@@ -108,13 +108,11 @@ def make_archive_searchbar(data: pd.DataFrame):
             url_search.lower(), case=False, na=False)]
 
         # Grammar on singular/plural
-        if df_result_search.shape[0] == 1:
-            st.sidebar.write("Found {} Archived Record".format(
-                str(df_result_search.shape[0])))
+        if df_result_search.shape[0] != 1:
+            pluralise = 's'
 
-        else:
-            st.sidebar.write("Found {} Archived Records".format(
-                str(df_result_search.shape[0])))
+        st.sidebar.write("Found {} Archived Record{}".format(
+            str(df_result_search.shape[0]), pluralise))
 
         return df_result_search
     return data
