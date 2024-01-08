@@ -65,17 +65,24 @@ def format_object_key_titles(keys: list[str]) -> list[str]:
     return set(formatted_keys)
 
 
-def download_data_files(s3_client: client, bucket: str, keys: list[str], folder_name: str) -> None:
+def download_data_file(s3_client: client, bucket: str, key: str, folder_name: str) -> str:
     """Downloads the files with relevant keys to a folder name of choice."""
 
     if not path.exists(folder_name):
         mkdir(folder_name)
 
-    for k in keys:
-        new_filename = k.replace('/', '-')
+    new_filename = key.replace('/', '-')
 
-        print(f"\nDownloading: {k}")
-        s3_client.download_file(bucket, k, f"{folder_name}/{new_filename}")
+    print(f"\nDownloading: {key}")
+    s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
+    return new_filename
+
+def get_object_from_s3(s3_client: client, bucket: str, filename: str) -> str:
+    """Accesses the html content directly from the s3 bucket and return it as a string."""
+    response = s3_client.get_object(Bucket=bucket, Key=filename)
+    html = response['Body'].read().decode('utf-8')
+    return html
+
 
 
 
@@ -83,12 +90,14 @@ if __name__ == "__main__":
 
     s3_client = get_s3_client()
 
-    keys = get_object_keys(s3_client, BUCKET)
+    # keys = get_object_keys(s3_client, BUCKET)
 
-    html_files = filter_keys_by_type(keys, '.html')
+    # html_files = filter_keys_by_type(keys, '.html')
 
-    ikea_html = filter_keys_by_website(html_files, 'bbc')
+    # ikea_html = filter_keys_by_website(html_files, 'bbc')
 
-    most_recent_files = get_recent_object_keys(s3_client, BUCKET, num_files=10)
+    # most_recent_files = get_recent_object_keys(s3_client, BUCKET, num_files=10)
 
-    download_data_files(s3_client, BUCKET, ikea_html, 'data')
+    # download_data_files(s3_client, BUCKET, ikea_html, 'data')
+
+    get_object_from_s3(s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")

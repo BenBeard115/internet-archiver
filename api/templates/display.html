@@ -23,7 +23,7 @@
         </p>
 
 
-        <iframe class="embed-container" src="{{ url_for('static', filename=html_filename) }}" title="description"
+        <iframe class="embed-container" src="data:text/html;base64, {{ html_content }}" title="description"
             width="80%" height="500"></iframe>
     </div>
 

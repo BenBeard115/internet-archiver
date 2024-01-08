@@ -5,6 +5,7 @@ import os
 from os import environ
 import requests
 import json
+import base64
 
 from boto3 import client
 from bs4 import BeautifulSoup
@@ -12,11 +13,10 @@ from dotenv import load_dotenv
 from flask import (
     Flask,
     render_template,
-    render_template_string,
     request,
     redirect,
-    send_from_directory,
-    send_file)
+    send_from_directory
+)
 
 from upload_to_s3 import (
     sanitise_filename,
@@ -36,9 +36,9 @@ from download_from_s3 import (
     get_object_keys,
     filter_keys_by_type,
     filter_keys_by_website,
-    download_data_files,
     get_recent_object_keys,
-    format_object_key_titles
+    format_object_key_titles,
+    get_object_from_s3
 )
 
 from chat_gpt_utils import (
@@ -140,10 +140,9 @@ def retrieve_searched_for_pages(input: str):
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     html_keys = filter_keys_by_type(keys, '.html')
     relevant_keys = filter_keys_by_website(html_keys, input)
-    download_data_files(
-        s3_client, environ['S3_BUCKET'], relevant_keys, 'static')
+  
     for key in relevant_keys:
-        pages.append({'display': key, 'filename': f"{key.replace('/', '-')}"})
+        pages.append({'display': key, 'filename': key})
     return pages
 
 
@@ -233,8 +232,15 @@ def display_page():
 
     url = request.args['display']
     html_filename = request.args['filename']
+    s3_client = client('s3',
+                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
+                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
 
-    return render_template('display.html', url=url, html_filename=html_filename)
+    html_object = get_object_from_s3(s3_client, environ['S3_BUCKET'], html_filename)
+    html_content_base64 = base64.b64encode(html_object.encode()).decode()
+
+
+    return render_template('display.html', url=url, html_content=html_content_base64)
 
 
 @app.route('/download/<filename>')
