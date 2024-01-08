@@ -62,7 +62,7 @@ def make_hourly_archive_tracker_line(data: pd.DataFrame):
 
 
 def make_daily_archive_tracker_line(data: pd.DataFrame):
-    """Makes an daily archive tracker."""
+    """Makes a daily archive tracker."""
     st.subheader("Total Websites Archived")
 
     archived = alt.Chart(data).mark_line().encode(
