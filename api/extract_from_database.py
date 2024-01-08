@@ -24,9 +24,9 @@ def extract_data(conn: extensions.connection, url: str) -> list[tuple]:
         table_2=sql.Identifier('url'),
         fields=sql.SQL(',').join([
             sql.Identifier('url'),
-            sql.Identifier('at'),
-            sql.Identifier('html'),
-            sql.Identifier('css')
+            sql.Identifier('scrape_at'),
+            sql.Identifier('html_s3_ref'),
+            sql.Identifier('css_s3_ref')
         ]),
         url=sql.Literal(url)
     )

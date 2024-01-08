@@ -60,14 +60,13 @@ def add_url(conn: extensions.connection, response_data: dict) -> None:
                 table=sql.Identifier('url'),
                 fields=sql.SQL(',').join([
                     sql.Identifier('url'),
-                    sql.Identifier('visit_count'),
-                    sql.Identifier('summary')
+                    sql.Identifier('summary'),
+                    sql.Identifier('genre')
                 ]),
                 values=sql.SQL(',').join([
                     sql.Literal(response_data["url"]),
-                    sql.Literal(0),
-                    sql.Literal(0),
-                    sql.Literal(response_data["summary"])
+                    sql.Literal(response_data.get("summary")),
+                    sql.Literal(response_data.get("genre"))
                 ])
             )
             cur.execute(insert_query)
@@ -93,15 +92,17 @@ def add_website(conn: extensions.connection, response_data: dict) -> None:
         table=sql.Identifier('page_scrape'),
         fields=sql.SQL(',').join([
             sql.Identifier('url_id'),
-            sql.Identifier('at'),
-            sql.Identifier('html'),
-            sql.Identifier('css')
+            sql.Identifier('scrape_at'),
+            sql.Identifier('html_s3_ref'),
+            sql.Identifier('css_s3_ref'),
+            sql.Identifier('is_human')
         ]),
         values=sql.SQL(',').join([
             sql.Literal(response_data["url_id"]),
             sql.Literal(response_data["timestamp"]),
             sql.Literal(response_data["html_filename"]),
-            sql.Literal(response_data["css_filename"])
+            sql.Literal(response_data["css_filename"]),
+            sql.Literal(response_data["is_human"])
         ])
     )
 
