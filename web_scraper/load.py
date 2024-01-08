@@ -47,7 +47,7 @@ def extract_domain(current_url: str) -> str:
 
     regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
 
-    match = re.search(regex_pattern, url)
+    match = re.search(regex_pattern, current_url)
     if not match:
         return None
     
