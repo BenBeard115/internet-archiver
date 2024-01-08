@@ -20,7 +20,7 @@ def add_interaction(conn: extensions.connection, interaction_data: dict) -> None
     if interaction_data.get("type") == 'visit':
         type_id = VISIT_ID
 
-    elif interaction_data.get("type_id") == 'save':
+    elif interaction_data.get("type") == 'save':
         type_id = SAVE_ID
 
     else:
@@ -153,12 +153,12 @@ if __name__ == "__main__":
         'genre': 'media'
     }
 
-    add_url(connection, example_response_data)
-    add_website(connection, example_response_data)
+    # add_url(connection, example_response_data)
+    # add_website(connection, example_response_data)
 
     example_interaction_data = {
         'url': "https://www.youtube.co.uk",
-        'type': 'visit',
+        'type': 'save',
         'interact_at': datetime(2023, 9, 22, 19, 10, 20)
     }
 

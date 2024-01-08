@@ -98,26 +98,33 @@ def make_daily_save_tracker_line(data: pd.DataFrame):
     st.altair_chart(archived, use_container_width=True)
 
 
-def make_archive_searchbar(data: pd.DataFrame):
+def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame):
     """Makes a searchbar that returns the number of archives of a website and the archive times."""
     url_search = st.sidebar.text_input(
         "URL Search", placeholder="Search here...")
 
     if url_search:
         # Gets dataframe of specified url
-        df_result_search = data[data['url'].str.contains(
+        scrape_df_result_search = scrape_df[scrape_df['url'].str.contains(
+            url_search.lower(), case=False, na=False)]
+
+        interaction_df_result_search = interaction_df[interaction_df['url'].str.contains(
             url_search.lower(), case=False, na=False)]
 
         # Grammar on singular/plural
         pluralise = ''
-        if df_result_search.shape[0] != 1:
+        if scrape_df_result_search.shape[0] != 1:
             pluralise = 's'
 
         st.sidebar.write("Found {} Archived Record{}".format(
-            str(df_result_search.shape[0]), pluralise))
+            str(scrape_df_result_search.shape[0]), pluralise))
 
-        return df_result_search
-    return data
+        pluralise = ''
+        if interaction_df_result_search[interaction_df_result_search["type"] == 'visit'].shape[0] != 1:
+            pluralise = 's'
+
+        return scrape_df_result_search, interaction_df_result_search
+    return scrape_df, interaction_df
 
 
 def make_popular_archives_bar(data: pd.DataFrame):
