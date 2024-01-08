@@ -14,10 +14,8 @@ from dashboard_functions import (
     make_archive_searchbar,
     make_date_filter,
     make_date_radio,
-    make_daily_visit_tracker_line,
-    make_daily_save_tracker_line,
-    make_hourly_visit_tracker_line,
-    make_hourly_save_tracker_line,
+    make_daily_tracker_line,
+    make_hourly_tracker_line,
     make_popular_visit_bar,
     make_popular_save_bar)
 
@@ -61,23 +59,15 @@ if __name__ == "__main__":
     selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
         selected_date_scrape_df, selected_date_interaction_df)
 
-    # make_daily_archive_tracker_line(df)
+    make_daily_tracker_line(interaction_df)
+
+    if selected_website_interaction_df.shape[0] > 0:
+        make_hourly_tracker_line(selected_website_interaction_df)
 
     col1, col2 = st.columns([5, 4])
-
-    # with col2:
-    #     if selected_date_df.shape[0] > 0:
-    #         make_popular_archives_bar(selected_date_df)
-
-    make_daily_visit_tracker_line(interaction_df)
-    make_daily_save_tracker_line(interaction_df)
-
-    with col1:
-        if selected_website_interaction_df.shape[0] > 0:
-            make_hourly_visit_tracker_line(selected_website_interaction_df)
-            make_hourly_save_tracker_line(selected_website_interaction_df)
-
-    with col2:
-        if selected_date_interaction_df.shape[0] > 0:
+    if selected_date_interaction_df.shape[0] > 0:
+        with col1:
             make_popular_visit_bar(selected_date_interaction_df)
+
+        with col2:
             make_popular_save_bar(selected_date_interaction_df)

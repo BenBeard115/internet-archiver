@@ -158,8 +158,8 @@ if __name__ == "__main__":
 
     example_interaction_data = {
         'url': "https://www.youtube.co.uk",
-        'type': 'save',
-        'interact_at': datetime(2023, 9, 22, 19, 10, 20)
+        'type': 'visit',
+        'interact_at': datetime(2023, 9, 26, 18, 10, 20)
     }
 
     add_url(connection, example_interaction_data)

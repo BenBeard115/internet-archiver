@@ -108,38 +108,26 @@ def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame
     return scrape_df, interaction_df
 
 
-def make_hourly_visit_tracker_line(data: pd.DataFrame):
+def make_hourly_tracker_line(data: pd.DataFrame):
     """Makes an hourly visit tracker."""
-    st.subheader("Websites Archived")
-    data = data[data["type"] == 'visit']
-
-    visited = alt.Chart(data).mark_line().encode(
-        x=alt.X("hours(interact_at):O").title("Time"),
-        y=alt.Y("count(url):Q").title("Archives Visited")).configure_line(color="#d15353")
-
-    st.altair_chart(visited, use_container_width=True)
-
-
-def make_hourly_save_tracker_line(data: pd.DataFrame):
-    """Makes an hourly visit tracker."""
-    st.subheader("Websites Archived")
-    data = data[data["type"] == 'save']
+    st.subheader("Websites Saved")
 
     saved = alt.Chart(data).mark_line().encode(
         x=alt.X("hours(interact_at):O").title("Time"),
-        y=alt.Y("count(url):Q").title("Archives Saved")).configure_line(color="#d15353")
+        y=alt.Y("count(url):Q").title("Archives Saved"),
+        color="type").configure_line(color="#d15353")
 
     st.altair_chart(saved, use_container_width=True)
 
 
-def make_daily_visit_tracker_line(data: pd.DataFrame):
+def make_daily_tracker_line(data: pd.DataFrame):
     """Makes an daily archive tracker."""
     st.subheader("Daily Archives Visited")
-    data = data[data["type"] == 'visit']
 
     archived = alt.Chart(data).mark_line().encode(
         x=alt.X("monthdate(interact_at):O").title("Time"),
-        y=alt.Y("visit_count:Q").title("Archives Visited")).configure_line(color="#d15353")
+        y=alt.Y("visit_count:Q").title("Archives Visited"),
+        color="type").configure_line(color="#d15353")
 
     st.altair_chart(archived, use_container_width=True)
 
@@ -175,7 +163,7 @@ def make_popular_visit_bar(data: pd.DataFrame):
 
 def make_popular_save_bar(data: pd.DataFrame):
     """Makes a bar chart for the most popular sites to archive."""
-    st.subheader("Popular Archives")
+    st.subheader("Popular Saves")
     # TODO Add text to each bar of the number of visits (only possible when visits added)
     # Gets the 5 most popular websites
     data = data[data["type"] == 'save']
@@ -188,3 +176,7 @@ def make_popular_save_bar(data: pd.DataFrame):
                                                          color="#d15353").properties(height=350)
 
     st.altair_chart(archives, use_container_width=True)
+
+
+def make_popular_genre_visit_bar():
+    pass
