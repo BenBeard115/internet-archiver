@@ -19,10 +19,8 @@ from flask import (
 from html2image import Html2Image
 
 from upload_to_s3 import (
-    sanitise_filename,
     extract_title,
     extract_domain,
-    upload_file_to_s3,
     get_s3_client
 )
 
@@ -48,6 +46,7 @@ from chat_gpt_utils import (
 
 DISPLAY_SIZE = (800, 600)
 IMAGE_FILE_FORMAT = '.png'
+HTML_FILE_FORMAT = '.html'
 
 
 load_dotenv()
@@ -74,7 +73,7 @@ def process_html_content(soup: BeautifulSoup,
     """Uploads the html content as a file to the S3 bucket, given a specific url soup."""
 
     filename_string = f"{domain}/{title}/{timestamp}"
-    html_object_key = f"{filename_string}.html"
+    html_object_key = f"{filename_string}{HTML_FILE_FORMAT}"
 
     html_content = soup.prettify()
 
