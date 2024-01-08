@@ -22,8 +22,8 @@ def sanitise_filename(filename: str) -> str:
 
     try:
         filename = str(filename)
-    except TypeError:
-        raise TypeError("This input cannot be sanitised!")
+    except TypeError as exc:
+        raise TypeError("This input cannot be sanitised!") from exc
 
     return re.sub(r'[^\w\s.-]', ' ', filename)
 
@@ -50,7 +50,7 @@ def extract_domain(current_url: str) -> str:
     match = re.search(regex_pattern, current_url)
     if not match:
         return None
-    
+
     return match.group(2) + match.group(3)
 
 
@@ -85,7 +85,7 @@ def upload_to_rds(conn: extensions.connection, current_url: str) -> None:
                         SELECT url_id FROM {environ["SCRAPE_TABLE_NAME"]}
                         WHERE html LIKE '%{s3_object_key_matcher}%' AND css LIKE '%{s3_object_key_matcher}%'
                         """)
-            
+
             try:
                 url_id = cur.fetchall()[0][0]
             except IndexError:
@@ -161,7 +161,8 @@ if __name__ == "__main__":
                        aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
     print(f"Connected to S3 --- {perf_counter() - startup}s.")
 
-    list_of_urls = ["https://eveninguniverse.com/fiction/the-meteor-generation.html", "https://www.youtube.co.uk", "https://www.youtube.co.uk/"]
+    list_of_urls = ["https://eveninguniverse.com/fiction/the-meteor-generation.html",
+                    "https://www.youtube.co.uk", "https://www.youtube.co.uk/"]
 
     download = perf_counter()
     print("Uploading HTML and CSS data to S3...")
