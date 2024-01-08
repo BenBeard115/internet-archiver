@@ -7,3 +7,4 @@ pytest
 pylint
 psycopg2
 openai
+html2image
