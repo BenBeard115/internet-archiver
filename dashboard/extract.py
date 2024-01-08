@@ -32,12 +32,12 @@ def get_all_data(conn: extensions.connection):
     logging.info("Extracting data...")
     query = sql.SQL("""
                     SELECT {fields}
-                    FROM {table_1}
-                    JOIN {table_2} ON {table_1}.url_id = {table_2}.url_id
+                    FROM {url_table}
+                    JOIN {page_scrape_table} ON {url_table}.url_id = {page_scrape_table}.url_id
                     ;
                     """).format(
-        table_1=sql.Identifier('page_scrape'),
-        table_2=sql.Identifier('url'),
+        page_scrape_table=sql.Identifier('page_scrape'),
+        url_table=sql.Identifier('url'),
         fields=sql.SQL(',').join([
             sql.Identifier('url'),
             sql.Identifier('at'),

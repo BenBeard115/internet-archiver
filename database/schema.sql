@@ -8,7 +8,8 @@ DROP TABLE IF EXISTS page_scrape CASCADE;
 CREATE TABLE url (
     url_id SERIAL PRIMARY KEY,
     url TEXT NOT NULL,
-    summary TEXT
+    summary TEXT,
+    genre TEXT
 );
 
 
