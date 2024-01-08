@@ -1,11 +1,10 @@
 """API script for Internet Archiver."""
 
+import base64
 from datetime import datetime
 import os
 from os import environ
 import requests
-import json
-import base64
 
 from boto3 import client
 from bs4 import BeautifulSoup
@@ -17,12 +16,14 @@ from flask import (
     redirect,
     send_from_directory
 )
+from html2image import Html2Image
 
 from upload_to_s3 import (
     sanitise_filename,
     extract_title,
     extract_domain,
-    upload_file_to_s3
+    upload_file_to_s3,
+    get_s3_client
 )
 
 from upload_to_database import (
@@ -45,76 +46,67 @@ from chat_gpt_utils import (
     generate_summary
 )
 
+DISPLAY_SIZE = (800, 600)
+IMAGE_FILE_FORMAT = '.png'
+
 
 load_dotenv()
+
+hti = Html2Image()
 
 app = Flask(__name__)
 
 
-def get_html(url: str) -> str:
-    """Gets HTML content of given webpage."""
+def get_soup(url: str) -> BeautifulSoup:
+    """Gets Soup object from url."""
 
     response = requests.get(url)
     response.raise_for_status()
 
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    return str(soup)
+    return BeautifulSoup(response.content, 'html.parser')
 
 
-def save_html_css(url: str) -> str:
-    """Scrape HTML and CSS from a given URL and save them."""
+def process_html_content(soup: BeautifulSoup,
+                         domain: str,
+                         title: str,
+                         timestamp: str,
+                         s3_client: client) -> str:
+    """Uploads the html content as a file to the S3 bucket, given a specific url soup."""
 
-    response = requests.get(url)
-    response.raise_for_status()
+    filename_string = f"{domain}/{title}/{timestamp}"
+    html_object_key = f"{filename_string}.html"
 
-    soup = BeautifulSoup(response.content, 'html.parser')
+    html_content = soup.prettify()
 
-    title = sanitise_filename(soup.title.text.strip())
+    s3_client.put_object(
+        Body=html_content, Bucket=environ['S3_BUCKET'], Key=html_object_key)
 
-    html_content = str(soup)
-    css_content = '\n'.join([style.text for style in soup.find_all('style')])
-
-    html_filename_temp = f"{title}_html.html"
-    css_filename_temp = f"{title}_css.css"
-
-    static_folder = os.path.join(os.getcwd(), 'static')
-
-    with open(os.path.join(static_folder, html_filename_temp), 'w', encoding='utf-8') as html_file:
-        html_file.write(html_content)
-
-    with open(os.path.join(static_folder, css_filename_temp), 'w', encoding='utf-8') as css_file:
-        css_file.write(css_content)
-
-    return html_filename_temp, css_filename_temp
+    return html_object_key
 
 
-def upload_to_s3(url: str, html_filename_temp: str, css_filename_temp: str):
-    """Uploads HTML and CSS to S3 bucket."""
+def process_screenshot(url: str,
+                       domain: str,
+                       title: str,
+                       timestamp: str,
+                       s3_client: client) -> None:
+    """Takes screenshot of webpage and uploads to S3."""
 
-    s3_client = client('s3',
-                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
-                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    img_filename_string = f"{domain}_{title}_{timestamp}"
+    img_object_key = f"{img_filename_string}{IMAGE_FILE_FORMAT}"
 
-    title = extract_title(url)
-    url_domain = extract_domain(url)
-    timestamp = datetime.utcnow().isoformat()
+    filename_string = f"{domain}/{title}/{timestamp}"
+    img_object_key_s3 = f"{filename_string}{IMAGE_FILE_FORMAT}"
 
-    html_file_to_upload = f'static/{html_filename_temp}'
-    css_file_to_upload = f'static/{css_filename_temp}'
+    hti.screenshot(url=url,
+                   size=DISPLAY_SIZE,
+                   save_as=img_object_key)
 
-    s3_object_key_html = f'{url_domain}/{title}/{timestamp}.html'
-    s3_object_key_css = f'{url_domain}/{title}/{timestamp}.css'
+    s3_client.upload_file(
+        img_object_key, environ['S3_BUCKET'], img_object_key_s3)
 
-    upload_file_to_s3(s3_client, html_file_to_upload,
-                      environ['S3_BUCKET'], s3_object_key_html)
-    upload_file_to_s3(s3_client, css_file_to_upload,
-                      environ['S3_BUCKET'], s3_object_key_css)
+    os.remove(img_object_key)
 
-    os.remove(html_file_to_upload)
-    os.remove(css_file_to_upload)
-
-    return s3_object_key_html, s3_object_key_css
+    return img_object_key_s3
 
 
 def get_most_recently_saved_web_pages() -> dict:
@@ -140,7 +132,7 @@ def retrieve_searched_for_pages(input: str):
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     html_keys = filter_keys_by_type(keys, '.html')
     relevant_keys = filter_keys_by_website(html_keys, input)
-  
+
     for key in relevant_keys:
         pages.append({'display': key, 'filename': key})
     return pages
@@ -181,18 +173,31 @@ def save():
     timestamp = datetime.utcnow().isoformat()
 
     try:
-        html_file_temp, css_data_temp = save_html_css(url)
-        html_filename, css_filename = upload_to_s3(
-            url, html_file_temp, css_data_temp)
 
-        gpt_summary = generate_summary(get_html(url))
+        soup = get_soup(url)
+
+        domain = extract_domain(url)
+        title = extract_title(url)
+        timestamp = datetime.utcnow().isoformat()
+
+        s3_client = get_s3_client(environ)
+
+        html_object_key = process_html_content(
+            soup, domain, title, timestamp, s3_client)
+        img_object_key_s3 = process_screenshot(
+            url, domain, title, timestamp, s3_client)
+
+        gpt_summary = generate_summary(str(soup))
+        print(gpt_summary)
 
         response_data = {
             'url': url,
-            'html_filename': html_filename,
-            'css_filename': css_filename,
-            'timestamp': timestamp,
-            'gpt_summary': gpt_summary
+            'html_s3_ref': html_object_key,
+            'css_s3_ref': 'css_data',
+            'screenshot_s3_ref': img_object_key_s3,
+            'scrape_at': timestamp,
+            'summary': gpt_summary,
+            'is_human': True
         }
 
         upload_to_database(response_data)
@@ -232,13 +237,11 @@ def display_page():
 
     url = request.args['display']
     html_filename = request.args['filename']
-    s3_client = client('s3',
-                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
-                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    s3_client = get_s3_client(environ)
 
-    html_object = get_object_from_s3(s3_client, environ['S3_BUCKET'], html_filename)
+    html_object = get_object_from_s3(
+        s3_client, environ['S3_BUCKET'], html_filename)
     html_content_base64 = base64.b64encode(html_object.encode()).decode()
-
 
     return render_template('display.html', url=url, html_content=html_content_base64)
 
