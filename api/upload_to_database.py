@@ -65,7 +65,7 @@ def add_url(conn: extensions.connection, response_data: dict) -> None:
                 ]),
                 values=sql.SQL(',').join([
                     sql.Literal(response_data["url"]),
-                    sql.Literal(response_data["visit_count"]),
+                    sql.Literal(0),
                     sql.Literal(response_data["summary"])
                 ])
             )
