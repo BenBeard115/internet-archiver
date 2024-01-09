@@ -20,7 +20,7 @@ def add_interaction(conn: extensions.connection, interaction_data: dict) -> None
     if interaction_data.get("type") == 'visit':
         type_id = VISIT_ID
 
-    elif interaction_data.get("type_id") == 'save':
+    elif interaction_data.get("type") == 'save':
         type_id = SAVE_ID
 
     else:

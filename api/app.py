@@ -1,7 +1,7 @@
 """API script for Internet Archiver."""
 
 import base64
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from os import environ
 import requests
@@ -36,10 +36,14 @@ from download_from_s3 import (
     get_object_keys,
     filter_keys_by_type,
     filter_keys_by_website,
-    get_recent_object_keys,
+    get_recent_png_s3_keys,
     format_object_key_titles,
     get_object_from_s3,
-    download_data_file
+    download_data_file,
+    get_all_pages_ordered,
+    get_all_screenshots,
+    get_scrape_times,
+    format_timestamps
 )
 
 from chat_gpt_utils import (
@@ -50,6 +54,9 @@ DISPLAY_SIZE = (800, 600)
 IMAGE_FILE_FORMAT = '.png'
 HTML_FILE_FORMAT = '.html'
 NUM_OF_SITES_HOMEPAGE = 12
+IMG_FOLDER = os.path.join(os.getcwd(), 'static', 'img')
+STATIC_FOLDER = os.path.join(os.getcwd(), 'static')
+USER_FRIENDLY_FORMAT = "%d %B %Y - %I:%M %p"
 
 
 load_dotenv()
@@ -117,7 +124,7 @@ def get_most_recently_saved_web_pages() -> dict:
     s3_client = client('s3',
                        aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
                        aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
-    keys = get_recent_object_keys(s3_client, environ['S3_BUCKET'])
+    keys = get_recent_png_s3_keys(s3_client, environ['S3_BUCKET'])
     titles = format_object_key_titles(keys)
     for title in titles:
         pages.append({'display': title, 'url': None})
@@ -152,11 +159,22 @@ def upload_interaction_to_database(interaction_data: dict):
     add_url(connection, interaction_data)
     add_interaction(connection, interaction_data)
 
+
+def convert_iso_to_datetime(dt_str: str) -> datetime:
+    """Converts ISO string to datetime."""
+    dt, _, us = dt_str.partition(".")
+    dt = datetime.strptime(dt, "%Y-%m-%dT%H:%M:%S")
+    us = int(us.rstrip("Z"), 10)
+
+    return dt + timedelta(microseconds=us)
+
+
 @app.route('/')
 def index():
     """First page of the website."""
 
     return render_template('index.html')
+
 
 @app.route('/submit')
 def submit():
@@ -164,15 +182,20 @@ def submit():
 
     status = request.args.get('status')
     gpt_summary = request.args.get('summary')
+    url = request.args.get('url')
+    timestamp = request.args.get('timestamp')
 
     s3_client = get_s3_client(environ)
 
-    recent_scrapes = get_recent_object_keys(
+    recent_scrapes = get_recent_png_s3_keys(
         s3_client, environ['S3_BUCKET'], NUM_OF_SITES_HOMEPAGE)
 
     local_img_files = []
     screenshot_labels = []
+    timestamps = []
     for scrape in recent_scrapes:
+
+        print(scrape)
 
         local_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], scrape, 'static')
@@ -181,24 +204,15 @@ def submit():
         screenshot_labels.append(scrape.split(
             '/')[0] + '/' + scrape.split('/')[1])
 
-    screenshots = zip(local_img_files, screenshot_labels)
+        timestamp = scrape.split('/')[-1].replace('.png', '')
+        timestamps.append(timestamp)
 
-    if status == 'success':
-        print(gpt_summary)
-        return render_template('submit.html',
-                               result='Save successful!',
-                               gpt_summary=gpt_summary,
-                               screenshots=screenshots
-                               )
-    elif status == 'failure':
-        return render_template('submit.html',
-                               result='Sorry, that webpage is not currently supported.',
-                               screenshots=screenshots)
-    else:
-        return render_template('submit.html', screenshots=screenshots)
+    print(local_img_files)
+    screenshots = zip(local_img_files, screenshot_labels, timestamps)
+
+    return render_template('submit.html', screenshots=screenshots)
 
 
-# Redirect to saved template page... with details
 @app.route('/save', methods=['POST'])
 def save():
     """Allows user to input URL and save HTML and CSS."""
@@ -237,11 +251,30 @@ def save():
 
         upload_scrape_to_database(response_data)
 
-        return redirect(f'/?status=success&summary={gpt_summary}')
+        timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)
+
+        interaction_data = {
+            'url': 'https://www.theguardian.com/film/2023/dec/31/raging-grace-review-gothic-infused-filipina-immigrant-thriller-paris-zarcilla',
+            'type': 'save',
+            'interact_at': timestamp
+        }
+
+        upload_interaction_to_database(interaction_data)
+
+        print(f"Upload successful: {interaction_data}")
+
+        # return redirect(f'/?status=success&summary={gpt_summary}&url={url}&timestamp={timestamp}')
+
+        return render_template('page_history.html',
+                               img_filename=img_object_key_s3,
+                               html_filename=html_object_key,
+                               url=url,
+                               timestamp=timestamp,
+                               gpt_summary=gpt_summary)
 
     except Exception as e:
         print(f"Error: {str(e)}")
-        return redirect('/?status=failure')
+        return redirect('/submit?status=failure')
 
 
 @app.route('/archived-pages', methods=['GET', 'POST'])
@@ -264,6 +297,75 @@ def dynamic_page(input):
     if len(url_links) == 0:
         return render_template("search_error.html", input=input)
     return render_template("result.html", input=input, links=url_links)
+
+
+@app.route('/page-history')
+def display_page_history():
+    """Page which displays all previous captures of a page."""
+
+    s3_client = get_s3_client(environ)
+
+    # url = request.args.get('url')
+    # timestamp = request.args.get('timestamp')
+    img_filename = request.args.get('img_filename')
+    print(img_filename)
+    # Looks like this: theculturetrip.com-Private Trips-2024-01-09T09:59:06.928136.png
+
+    html_filename = img_filename.replace('.png', '.html').replace('_', '/')
+    print(html_filename)
+
+    label = request.args.get('label')
+    # Looks like this: theculturetrip.com/Private Trips
+
+    html_files = get_all_pages_ordered(
+        s3_client, html_filename, environ['S3_BUCKET'])
+
+    img_files = get_all_screenshots(html_files)
+
+    scrape_times = get_scrape_times(html_files)
+    formatted_ts = format_timestamps(scrape_times)
+
+    pages = zip(html_files, img_files, formatted_ts)
+
+    """
+    VISIT COUNTER:
+    Every time this endpoint is visited, add log to user_interaction
+    with:
+        - interaction_id (serial)
+        - url_id (get reference) - get matching ID
+        - type_id (save (2) or visit (1)) - this will be a 'view'
+        - timestamp (interaction) - create timestamp and submit
+
+    IF VIEW:
+        We have label and img_filename:
+            FIND WAY TO GET RELEVANT URL and TIMESTAMP from these two variables
+        Create interaction dictionary
+        Set up DB connection
+        add_interaction() for visit
+    
+    IF SAVE:
+        Take in arguments (url, timestamp?, is_save?)
+        Create interaction dictionary
+        Set up DB connection
+        add_url() for save
+    """
+
+    # timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)
+    # print(timestamp, type(timestamp))
+
+    # interaction_data = {
+    #     'url': 'https://www.bbc.co.uk/news/uk-politics-62064552',
+    #     'type': 'visit',
+    #     'interact_at': datetime(2024, 1, 9, 11, 15, 14)
+    # }
+
+    # print(interaction_data)
+
+    # upload_interaction_to_database(interaction_data)
+
+    return render_template('page_history.html',
+                           label=label,
+                           pages=pages)
 
 
 @app.get("/display-page")

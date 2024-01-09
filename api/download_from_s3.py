@@ -7,6 +7,7 @@ from boto3 import client
 from dotenv import load_dotenv
 
 BUCKET = 'c9-internet-archiver-bucket'
+USER_FRIENDLY_FORMAT = '%d %B %Y - %I:%M %p'
 
 load_dotenv()
 
@@ -43,7 +44,7 @@ def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
     return filtered_keys
 
 
-def get_recent_object_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
+def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
     """Returns a list of the 'num_files' most recent object keys uploaded to S3."""
 
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
@@ -69,7 +70,7 @@ def format_object_key_titles(keys: list[str]) -> list[str]:
 def download_data_file(s3_client: client, bucket: str, key: str, folder_name: str) -> str:
     """Downloads the files with relevant keys to a folder name of choice."""
 
-    new_filename = key.replace('/', '-')
+    new_filename = key.replace('/', '_')
 
     print(f"\nDownloading: {key}")
     s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
@@ -81,6 +82,38 @@ def get_object_from_s3(s3_client: client, bucket: str, filename: str) -> str:
     response = s3_client.get_object(Bucket=bucket, Key=filename)
     html = response['Body'].read().decode('utf-8')
     return html
+
+
+def get_all_pages_ordered(s3_client: client, html_filename: str, bucket: str) -> list[str]:
+    """Gets all previous scrapes of a webpage and returns the keys in reverse chronological order."""
+
+    startswith = f"{html_filename.split('/')[0]}/{html_filename.split('/')[1]}"
+
+    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    sorted_contents = sorted(
+        contents, key=lambda x: x['LastModified'], reverse=True)
+
+    return [object['Key'] for object in sorted_contents if object['Key'].startswith(startswith) and object['Key'].endswith('.html')]
+
+
+def get_all_screenshots(html_files: list[str]) -> list[str]:
+    """Gets all corresponding screenshots of a webpage."""
+
+    return [filename.replace('.html', '.png') for filename in html_files]
+
+
+def get_scrape_times(html_files: list[str]) -> list[str]:
+    """Extract the times scraped."""
+
+    return [filename.split('/')[-1].replace('.html', '')
+            for filename in html_files]
+
+
+def format_timestamps(timestamps: list[str]) -> list[str]:
+    """Convert to user-friendly format."""
+
+    return [datetime.strptime(
+        ts, "%Y-%m-%dT%H:%M:%S.%f").strftime(USER_FRIENDLY_FORMAT) for ts in timestamps]
 
 
 if __name__ == "__main__":
