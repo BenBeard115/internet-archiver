@@ -152,9 +152,14 @@ def upload_interaction_to_database(interaction_data: dict):
     add_url(connection, interaction_data)
     add_interaction(connection, interaction_data)
 
-
 @app.route('/')
 def index():
+    """First page of the website."""
+
+    return render_template('index.html')
+
+@app.route('/submit')
+def submit():
     """Main page of website."""
 
     status = request.args.get('status')
@@ -180,17 +185,17 @@ def index():
 
     if status == 'success':
         print(gpt_summary)
-        return render_template('index.html',
+        return render_template('submit.html',
                                result='Save successful!',
                                gpt_summary=gpt_summary,
                                screenshots=screenshots
                                )
     elif status == 'failure':
-        return render_template('index.html',
+        return render_template('submit.html',
                                result='Sorry, that webpage is not currently supported.',
                                screenshots=screenshots)
     else:
-        return render_template('index.html', screenshots=screenshots)
+        return render_template('submit.html', screenshots=screenshots)
 
 
 # Redirect to saved template page... with details
@@ -239,8 +244,8 @@ def save():
         return redirect('/?status=failure')
 
 
-@app.route('/saved-pages', methods=['GET', 'POST'])
-def view_saved_pages():
+@app.route('/archived-pages', methods=['GET', 'POST'])
+def view_archived_pages():
     """Allows the user to view a list of currently saved webpages."""
 
     if request.method == "POST":
@@ -248,7 +253,7 @@ def view_saved_pages():
         return redirect(f"/result/{input}")
 
     url_links = get_most_recently_saved_web_pages()
-    return render_template("saved_pages.html", links=url_links)
+    return render_template("archived_pages.html", links=url_links)
 
 
 @app.get("/result/<input>")
