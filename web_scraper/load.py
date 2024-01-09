@@ -26,7 +26,7 @@ IS_HUMAN = False
 def get_soup(current_url: str) -> BeautifulSoup:
     """Gets Soup object from url."""
 
-    response = requests.get(current_url)
+    response = requests.get(current_url, timeout=30)
     response.raise_for_status()
 
     return BeautifulSoup(response.content, 'html.parser')
@@ -37,8 +37,8 @@ def sanitise_filename(filename: str) -> str:
 
     try:
         filename = str(filename)
-    except TypeError:
-        raise TypeError("This input cannot be sanitised!")
+    except TypeError as exc:
+        raise TypeError("This input cannot be sanitised!") from exc
 
     return re.sub(r'[^\w\s.-]', ' ', filename)
 
@@ -48,13 +48,13 @@ def extract_title(current_url: str) -> str:
 
     try:
         req = Request(current_url, headers={'User-Agent': 'Mozilla/5.0'})
-        page = urlopen(req)
-        soup = BeautifulSoup(page, 'html.parser')
-        title = soup.title.text.strip()
+        with urlopen(req) as page:
+            current_soup = BeautifulSoup(page, 'html.parser')
+            current_title = current_soup.title.text.strip()
     except (URLError, HTTPError):
         return None
 
-    return sanitise_filename(title)
+    return sanitise_filename(current_title)
 
 
 def extract_domain(current_url: str) -> str:
@@ -65,21 +65,21 @@ def extract_domain(current_url: str) -> str:
     match = re.search(regex_pattern, current_url)
     if not match:
         return None
-    
+
     return match.group(2) + match.group(3)
 
 
-def process_html_content(soup: BeautifulSoup,
-                         domain: str,
-                         title: str,
-                         timestamp: str,
-                         s3_client: client) -> str:
+def process_html_content(current_soup: BeautifulSoup,
+                        current_domain: str,
+                        current_title: str,
+                        current_timestamp: str,
+                        s3_client: client) -> str:
     """Uploads the html content as a file to the S3 bucket, given a specific url soup."""
 
-    filename_string = f"{domain}/{title}/{timestamp}"
+    filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     html_object_key = f"{filename_string}{HTML_FILE_FORMAT}"
 
-    html_content = soup.prettify()
+    html_content = current_soup.prettify()
 
     s3_client.put_object(
         Body=html_content, Bucket=environ["S3_BUCKET"], Key=html_object_key)
@@ -87,17 +87,17 @@ def process_html_content(soup: BeautifulSoup,
     return html_object_key
 
 
-def process_css_content(soup: BeautifulSoup,
-                         domain: str,
-                         title: str,
-                         timestamp: str,
-                         s3_client: client) -> str:
+def process_css_content(current_soup: BeautifulSoup,
+                        current_domain: str,
+                        current_title: str,
+                        current_timestamp: str,
+                        s3_client: client) -> str:
     """Uploads the css content as a file to the S3 bucket, given a specific url soup."""
 
-    filename_string = f"{domain}/{title}/{timestamp}"
+    filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     css_object_key = f"{filename_string}{CSS_FILE_FORMAT}"
 
-    css_content = soup.prettify()
+    css_content = current_soup.prettify()
 
     s3_client.put_object(
         Body=css_content, Bucket=environ["S3_BUCKET"], Key=css_object_key)
@@ -106,17 +106,17 @@ def process_css_content(soup: BeautifulSoup,
 
 
 def process_screenshot(current_url: str,
-                       domain: str,
-                       title: str,
-                       timestamp: str,
+                       current_domain: str,
+                       current_title: str,
+                       current_timestamp: str,
                        s3_client: client,
-                       hti_object: Html2Image) -> None:
+                       hti_object: Html2Image) -> str:
     """Takes screenshot of webpage and uploads to S3."""
 
-    img_filename_string = f"{domain}_{title}_{timestamp}"
+    img_filename_string = f"{current_domain}_{current_title}_{current_timestamp}"
     img_object_key = f"{img_filename_string}{IMAGE_FILE_FORMAT}"
 
-    filename_string = f"{domain}/{title}/{timestamp}"
+    filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     img_object_key_s3 = f"{filename_string}{IMAGE_FILE_FORMAT}"
 
     hti_object.screenshot(url=current_url,
@@ -142,20 +142,20 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
         print("Unable to upload file. Missing parameters required for upload!")
 
 
-def add_website(conn: extensions.connection, response_data: dict, current_url: str) -> None:
+def add_website(conn: extensions.connection, current_response_data: dict, current_url: str) -> None:
     """Adds a website's data to the database."""
 
     with conn.cursor() as cur:
-            cur.execute(f"""
-                        SELECT {environ["SCRAPE_TABLE_NAME"]}.url_id FROM {environ["SCRAPE_TABLE_NAME"]}
-                        JOIN url ON {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id
-                        WHERE url LIKE '%{current_url}%'
-                        """)
+        cur.execute(f"""
+                    SELECT {environ["SCRAPE_TABLE_NAME"]}.url_id FROM {environ["SCRAPE_TABLE_NAME"]}
+                    JOIN url ON {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id
+                    WHERE url LIKE '%{current_url}%'
+                    """)
 
-            try:
-                response_data["url_id"] = cur.fetchall()[0][0]
-            except IndexError:
-                return
+        try:
+            current_response_data["url_id"] = cur.fetchall()[0][0]
+        except IndexError:
+            return
 
     query = sql.SQL("""
                     INSERT INTO {table} 
@@ -172,12 +172,12 @@ def add_website(conn: extensions.connection, response_data: dict, current_url: s
             sql.Identifier('is_human')
         ]),
         values=sql.SQL(',').join([
-            sql.Literal(response_data["url_id"]),
-            sql.Literal(response_data["scrape_at"]),
-            sql.Literal(response_data["html_s3_ref"]),
-            sql.Literal(response_data["css_s3_ref"]),
-            sql.Literal(response_data["screenshot_s3_ref"]),
-            sql.Literal(response_data["is_human"])
+            sql.Literal(current_response_data["url_id"]),
+            sql.Literal(current_response_data["scrape_at"]),
+            sql.Literal(current_response_data["html_s3_ref"]),
+            sql.Literal(current_response_data["css_s3_ref"]),
+            sql.Literal(current_response_data["screenshot_s3_ref"]),
+            sql.Literal(current_response_data["is_human"])
         ])
     )
 
@@ -199,7 +199,8 @@ if __name__ == "__main__":
                        aws_secret_access_key=environ["AWS_SECRET_ACCESS_KEY"])
     print(f"Connected to S3 --- {perf_counter() - startup}s.")
 
-    list_of_urls = ["https://eveninguniverse.com/fiction/the-meteor-generation.html", "https://www.youtube.co.uk", "https://www.youtube.co.uk/"]
+    list_of_urls = ["https://eveninguniverse.com/fiction/the-meteor-generation.html",
+                    "https://www.youtube.co.uk", "https://www.youtube.co.uk/"]
 
     download = perf_counter()
     print("Uploading HTML and image data to S3...")
@@ -212,8 +213,10 @@ if __name__ == "__main__":
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
         img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
-        
-        response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name, "css_s3_ref": css_file_name, "screenshot_s3_ref": img_file_name, "is_human": IS_HUMAN}
+
+        response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name,
+                        "css_s3_ref": css_file_name, "screenshot_s3_ref": img_file_name,
+                        "is_human": IS_HUMAN}
 
         if html_file_name and img_file_name and css_file_name:
             add_website(connection, response_data, url)

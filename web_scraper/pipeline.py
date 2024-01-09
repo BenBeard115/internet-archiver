@@ -9,7 +9,9 @@ from boto3 import client
 from html2image import Html2Image
 
 from extract import get_database_connection, load_all_data
-from load import add_website, get_soup, extract_title, extract_domain, process_html_content, process_screenshot, process_css_content
+from load import (add_website, get_soup, extract_title,
+                  extract_domain, process_html_content,
+                  process_screenshot, process_css_content)
 
 IS_HUMAN = False
 
@@ -43,8 +45,10 @@ if __name__ == "__main__":
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
         img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
-        
-        response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name, "css_s3_ref": css_file_name, "screenshot_s3_ref": img_file_name, "is_human": IS_HUMAN}
+
+        response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name,
+                        "css_s3_ref": css_file_name, "screenshot_s3_ref": img_file_name,
+                        "is_human": IS_HUMAN}
 
         if html_file_name and img_file_name and css_file_name:
             add_website(connection, response_data, url)
