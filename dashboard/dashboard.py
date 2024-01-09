@@ -57,6 +57,9 @@ if __name__ == "__main__":
     scrape_df, interaction_df = setup_database()
     setup_page()
 
+    st.sidebar.write(
+        "[Internet Archiver Website](http://35.178.152.21:5000/)")
+
     radio = make_date_radio()
     selected_date_scrape_df, selected_date_interaction_df = make_date_filter(
         scrape_df, interaction_df, radio)

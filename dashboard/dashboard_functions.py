@@ -3,7 +3,7 @@ import pandas as pd
 import altair as alt
 import streamlit as st
 
-# TODO Add website url, add metrics, last accessed/scraped
+# TODO Add website url, last accessed/scraped
 
 
 def make_metrics(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame) -> None:
