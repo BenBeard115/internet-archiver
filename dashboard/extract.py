@@ -7,15 +7,15 @@ from psycopg2 import connect, sql, DatabaseError, OperationalError, extensions
 import pandas as pd
 
 
-def get_connection(environ: environ) -> extensions.connection:
+def get_connection(config: environ) -> extensions.connection:
     """Connects to the postgres database hosted on aws RDS."""
     connect_time = perf_counter()
     logging.info("Connecting to database...")
     try:
-        conn = connect(user=environ["DB_USERNAME"],
-                       dbname=environ["DB_NAME"],
-                       password=environ["DB_PASSWORD"],
-                       host=environ["DB_IP"])
+        conn = connect(user=config["DB_USERNAME"],
+                       dbname=config["DB_NAME"],
+                       password=config["DB_PASSWORD"],
+                       host=config["DB_IP"])
         logging.info("Connected --- %ss.",
                      round(perf_counter() - connect_time, 3))
         return conn
@@ -74,3 +74,4 @@ def get_all_interaction_data(conn: extensions.connection):
                  round(perf_counter() - extract_time, 3))
 
     return pd.DataFrame(rows, columns=["url", "genre", "interact_at", "type"])
+

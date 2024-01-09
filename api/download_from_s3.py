@@ -23,7 +23,7 @@ def get_object_keys(s3_client: client, bucket: str) -> list[str]:
     """Returns a list of object keys from a given bucket."""
 
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
-    
+
     return [o['Key'] for o in contents]
 
 
@@ -46,14 +46,14 @@ def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
 def get_recent_object_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
     """Returns a list of the 'num_files' most recent object keys uploaded to S3."""
 
-
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
 
-    sorted_contents = sorted(contents, key=lambda x: x['LastModified'], reverse=True)
+    sorted_contents = sorted(
+        contents, key=lambda x: x['LastModified'], reverse=True)
 
     recent_keys = [
-        o['Key'] for o in sorted_contents[:num_files] if '.html' in o["Key"]
-    ]
+        o['Key'] for o in sorted_contents if '.png' in o["Key"]
+    ][:num_files]
 
     return recent_keys
 
@@ -61,15 +61,13 @@ def get_recent_object_keys(s3_client: client, bucket: str, num_files: int = 10) 
 def format_object_key_titles(keys: list[str]) -> list[str]:
     """Formats the keys as standardised titles to be listed on the website."""
 
-    formatted_keys = [key.split('-')[0].replace("  ", " ").replace('/',' - ') for key in keys]
+    formatted_keys = [
+        key.split('-')[0].replace("  ", " ").replace('/', ' - ') for key in keys]
     return set(formatted_keys)
 
 
 def download_data_file(s3_client: client, bucket: str, key: str, folder_name: str) -> str:
     """Downloads the files with relevant keys to a folder name of choice."""
-
-    if not path.exists(folder_name):
-        mkdir(folder_name)
 
     new_filename = key.replace('/', '-')
 
@@ -77,13 +75,12 @@ def download_data_file(s3_client: client, bucket: str, key: str, folder_name: st
     s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
     return new_filename
 
+
 def get_object_from_s3(s3_client: client, bucket: str, filename: str) -> str:
     """Accesses the html content directly from the s3 bucket and return it as a string."""
     response = s3_client.get_object(Bucket=bucket, Key=filename)
     html = response['Body'].read().decode('utf-8')
     return html
-
-
 
 
 if __name__ == "__main__":
@@ -100,4 +97,5 @@ if __name__ == "__main__":
 
     # download_data_files(s3_client, BUCKET, ikea_html, 'data')
 
-    get_object_from_s3(s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")
+    get_object_from_s3(
+        s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")

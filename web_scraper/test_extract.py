@@ -21,4 +21,3 @@ def test_convert_to_set_removes_duplicates():
     urls = ['https://www.google.co.uk','https://www.youtube.co.uk', 'https://www.youtube.co.uk']
     assert convert_to_set(urls) == {
         'https://www.google.co.uk', 'https://www.youtube.co.uk'}
-

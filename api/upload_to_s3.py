@@ -1,13 +1,21 @@
 """Functions to upload HTML and CSS files to S3 bucket."""
 
 from datetime import datetime
-from os import environ
+from os import environ, _Environ
 import re
 
 from boto3 import client
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from urllib.request import urlopen, Request
+
+
+def get_s3_client(config: _Environ) -> client:
+    """Gets S3 client."""
+
+    return client('s3',
+                  aws_access_key_id=config['AWS_ACCESS_KEY_ID'],
+                  aws_secret_access_key=config['AWS_SECRET_ACCESS_KEY'])
 
 
 def sanitise_filename(filename: str) -> str:

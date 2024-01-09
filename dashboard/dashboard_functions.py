@@ -1,18 +1,20 @@
 """Script containing functions to make the graphs on the dashboard."""
-from datetime import datetime
 import pandas as pd
 import altair as alt
 import streamlit as st
 
 
 def make_date_radio():
+    """Makes a date radio."""
     radio = st.sidebar.radio(label='Date Filter', options=[
         'None', 'Date Range', "Singular Date"])
 
     st.sidebar.write(
-        """<style>div.row-widget.stRadio > div{flex-direction:row;}</style>""", unsafe_allow_html=True)
+        """<style>div.row-widget.stRadio > div{flex-direction:row;}</style>""",
+        unsafe_allow_html=True)
 
     return radio
+
 
 
 def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radio: str):
@@ -41,7 +43,8 @@ def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radi
 
     if radio == "Date Range":
         selected_date = st.sidebar.date_input(
-            "Select a date", (min_date, max_date), key='date_selector', min_value=min_date, max_value=max_date)
+            "Select a date", (min_date, max_date), key='date_selector',
+            min_value=min_date, max_value=max_date)
 
         if len(selected_date) == 2:
             return scrape_df[(scrape_df['scrape_at'].dt.date >= selected_date[0]) & (scrape_df['scrape_at'].dt.date <= selected_date[1])], interaction_df[(
@@ -150,6 +153,7 @@ def make_popular_visit_bar(data: pd.DataFrame):
     st.altair_chart(archives)
 
 
+
 def make_popular_genre_visit_bar(data):
     st.subheader("Popular Genres")
     # Gets the 5 most popular genres
@@ -171,5 +175,6 @@ def make_recent_archive_database(data):
     st.subheader("Archives")
     # Filter out auto-scraping
     data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
+
 
     st.dataframe(data)

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Internet Archiver</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+</head>
+
+<body>
+    <!-- HEADER COMPONENT -->
+
+        <header class="container text-center">
+        <h1 class="display-1">Submit Web Page</h1>
+
+
+        <form action="/save" method="post">
+            <label for="url">Enter URL:</label>
+            <input type="text" id="url" name="url" required>
+            <button type="submit">Save</button>
+        </form>
+
+        <h2 class="result_message">{{ result }}</h2>
+
+
+        <p class="gpt_summary">{{ gpt_summary }}</p>
+
+
+        <h1 class="display-3">Recent Web Pages</h1>
+        <div>
+            <p>Check out some recently saved pages from users.
+            </p>
+        </div>
+        <hr>
+
+        <div class="menu-container">
+            {% for img_filename, label in screenshots %}
+            <div class="menu-item">
+                <a href="">
+                    <img src="{{ url_for('static', filename=img_filename) }}" alt="Screenshot">
+                    <p>{{ label }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        <div>
+    
+        <hr>
+        <button
+        class="btn btn-warning"
+        onclick='window.location.href = "/"'
+        >
+        Return Home
+        </button>
+        <button class="btn btn-warning" onclick='window.location.href = "/archived-pages"'>
+            Search Archived Pages
+        </button>
+</body>
+
+</html>
