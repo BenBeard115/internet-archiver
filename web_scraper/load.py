@@ -142,17 +142,18 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
         print("Unable to upload file. Missing parameters required for upload!")
 
 
-def add_website(conn: extensions.connection, response_data: dict) -> None:
+def add_website(conn: extensions.connection, response_data: dict, current_url: str) -> None:
     """Adds a website's data to the database."""
 
     with conn.cursor() as cur:
             cur.execute(f"""
-                        SELECT url_id FROM {environ["SCRAPE_TABLE_NAME"]}
-                        WHERE html LIKE '%{response_data[""]}%' AND css LIKE '%{s3_object_key_matcher}%'
+                        SELECT {environ["SCRAPE_TABLE_NAME"]}.url_id FROM {environ["SCRAPE_TABLE_NAME"]}
+                        JOIN url ON {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id
+                        WHERE url LIKE '%{current_url}%'
                         """)
 
             try:
-                url_id = cur.fetchall()[0][0]
+                response_data["url_id"] = cur.fetchall()[0][0]
             except IndexError:
                 return
 
@@ -172,10 +173,10 @@ def add_website(conn: extensions.connection, response_data: dict) -> None:
         ]),
         values=sql.SQL(',').join([
             sql.Literal(response_data["url_id"]),
-            sql.Literal(response_data["scrape_timestamp"]),
-            sql.Literal(response_data["html_filename"]),
-            sql.Literal(response_data["css_filename"]),
-            sql.Literal(response_data["screenshot_filename"]),
+            sql.Literal(response_data["scrape_at"]),
+            sql.Literal(response_data["html_s3_ref"]),
+            sql.Literal(response_data["css_s3_ref"]),
+            sql.Literal(response_data["screenshot_s3_ref"]),
             sql.Literal(response_data["is_human"])
         ])
     )
@@ -212,14 +213,9 @@ if __name__ == "__main__":
         img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
         
-        response_data = {'url_id': 
-                         'scrape_at'
-            'html_s3_ref'
-            'css_s3_ref'
-            'screenshot_s3_ref'
-            'is_human'
+        response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name, "css_s3_ref": css_file_name, "screenshot_s3_ref": img_file_name, "is_human": IS_HUMAN}
 
         if html_file_name and img_file_name and css_file_name:
-            add_website(connection, url, html_file_name, img_file_name, css_file_name, timestamp)
+            add_website(connection, response_data, url)
 
     print(f"Data uploaded --- {perf_counter() - download}s.")
