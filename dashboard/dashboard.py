@@ -7,16 +7,16 @@ from dotenv import load_dotenv
 import streamlit as st
 from PIL import Image
 
-from extract import get_connection, get_all_data
+from extract import get_connection, get_all_scrape_data, get_all_interaction_data
 from dashboard_functions import (
-    make_hourly_archive_tracker_line,
     make_archive_searchbar,
-    make_popular_archives_bar,
-    make_daily_archive_tracker_line,
     make_date_filter,
     make_date_radio,
-    make_daily_visit_tracker_line,
-    make_daily_save_tracker_line)
+    make_daily_tracker_line,
+    make_hourly_tracker_line,
+    make_popular_genre_visit_bar,
+    make_popular_visit_bar,
+    make_recent_archive_database)
 
 
 def make_url_alias(url):
@@ -32,9 +32,13 @@ def setup_database():
     logging.getLogger().setLevel(logging.INFO)
 
     connection = get_connection(environ)
-    database_df = get_all_data(connection)
-    database_df["url_alias"] = database_df["url"].apply(make_url_alias)
-    return database_df
+
+    scrape_df = get_all_scrape_data(connection)
+    scrape_df["url_alias"] = scrape_df["url"].apply(make_url_alias)
+
+    interaction_df = get_all_interaction_data(connection)
+    interaction_df["url_alias"] = interaction_df["url"].apply(make_url_alias)
+    return scrape_df, interaction_df
 
 
 def setup_page():
@@ -49,24 +53,24 @@ def setup_page():
 
 
 if __name__ == "__main__":
-    df = setup_database()
+    scrape_df, interaction_df = setup_database()
     setup_page()
 
     radio = make_date_radio()
-    selected_date_df = make_date_filter(df, radio)
-    selected_website_df = make_archive_searchbar(selected_date_df)
+    selected_date_scrape_df, selected_date_interaction_df = make_date_filter(
+        scrape_df, interaction_df, radio)
+    selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
+        selected_date_scrape_df, selected_date_interaction_df)
 
-    make_daily_archive_tracker_line(df)
+    make_daily_tracker_line(interaction_df)
 
-    col1, col2 = st.columns([3, 2])
+    if selected_website_interaction_df.shape[0] > 0:
+        make_hourly_tracker_line(selected_website_interaction_df)
 
-    with col1:
-        if selected_website_df.shape[0] > 0:
-            make_hourly_archive_tracker_line(selected_website_df)
+    if selected_date_interaction_df.shape[0] > 0:
+        make_popular_visit_bar(selected_date_interaction_df)
 
-    with col2:
-        if selected_date_df.shape[0] > 0:
-            make_popular_archives_bar(selected_date_df)
+        make_popular_genre_visit_bar(selected_date_interaction_df)
 
-    make_daily_visit_tracker_line(df)
-    make_daily_save_tracker_line(df)
+    if selected_date_scrape_df.shape[0] > 0:
+        make_recent_archive_database(selected_date_scrape_df)
