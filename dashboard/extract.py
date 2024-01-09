@@ -74,4 +74,3 @@ def get_all_interaction_data(conn: extensions.connection):
                  round(perf_counter() - extract_time, 3))
 
     return pd.DataFrame(rows, columns=["url", "genre", "interact_at", "type"])
-

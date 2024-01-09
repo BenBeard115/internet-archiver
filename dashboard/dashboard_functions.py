@@ -16,7 +16,6 @@ def make_date_radio():
     return radio
 
 
-
 def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radio: str):
     """Makes a date filter"""
     min_date = min([min(scrape_df['scrape_at'].dt.date),
@@ -50,9 +49,8 @@ def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radi
             return scrape_df[(scrape_df['scrape_at'].dt.date >= selected_date[0]) & (scrape_df['scrape_at'].dt.date <= selected_date[1])], interaction_df[(
                 interaction_df['interact_at'].dt.date >= selected_date[0]) & (interaction_df['interact_at'].dt.date <= selected_date[1])]
 
-        else:
-            return scrape_df[(scrape_df['scrape_at'].dt.date == selected_date[0])], interaction_df[
-                (interaction_df['interact_at'].dt.date == selected_date[0])]
+        return scrape_df[(scrape_df['scrape_at'].dt.date == selected_date[0])], interaction_df[
+            (interaction_df['interact_at'].dt.date == selected_date[0])]
 
     return scrape_df, interaction_df
 
@@ -117,8 +115,9 @@ def make_hourly_tracker_line(data: pd.DataFrame):
 
     saved = alt.Chart(data).mark_line().encode(
         x=alt.X("hours(interact_at):O").title("Time"),
-        y=alt.Y("count(url):Q").title("Archive Number"),
-        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])))
+        y=alt.Y("count(url):Q").title("Archives"),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
+            "Type"))
 
     st.altair_chart(saved, use_container_width=True)
 
@@ -129,14 +128,15 @@ def make_daily_tracker_line(data: pd.DataFrame):
 
     archived = alt.Chart(data).mark_line().encode(
         x=alt.X("monthdate(interact_at):O").title("Time"),
-        y=alt.Y("visit_count:Q").title("Archives Visited"),
-        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])))
+        y=alt.Y("count(url):Q").title("Archives"),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
+            "Type"))
 
     st.altair_chart(archived, use_container_width=True)
 
 
 def make_popular_visit_bar(data: pd.DataFrame):
-    """Makes a bar chart for the most popular sites to archive."""
+    """Makes a bar chart for the most popular sites to visit and save."""
     st.subheader("Popular Archives")
     # Gets the 5 most popular websites
     data = data.groupby(['url_alias', 'type'])['url_alias'].count().reset_index(
@@ -147,14 +147,15 @@ def make_popular_visit_bar(data: pd.DataFrame):
             "Count"),
         y=alt.Y("type", axis=None).title(
             "Type").sort("-x"),
-        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
+            "Type"),
         row=alt.Row('url_alias').sort("descending").title("URL")).properties(height=70, width=800)
 
     st.altair_chart(archives)
 
 
-
 def make_popular_genre_visit_bar(data):
+    """Makes a bar chart for the most popular genres to visit and save."""
     st.subheader("Popular Genres")
     # Gets the 5 most popular genres
     data = data.groupby(['genre', 'type'])['url_alias'].count().reset_index(
@@ -165,16 +166,17 @@ def make_popular_genre_visit_bar(data):
             "Count"),
         y=alt.Y("type", axis=None).title(
             "Type").sort("-x"),
-        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
+            "Type"),
         row=alt.Row('genre').sort("descending").title("Genre")).properties(height=70, width=800)
 
     st.altair_chart(genre)
 
 
 def make_recent_archive_database(data):
+    """Makes database of human input archives."""
     st.subheader("Archives")
     # Filter out auto-scraping
     data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
-
 
     st.dataframe(data)

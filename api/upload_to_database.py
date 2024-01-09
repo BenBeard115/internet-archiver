@@ -153,8 +153,8 @@ if __name__ == "__main__":
         'genre': 'media'
     }
 
-    # add_url(connection, example_response_data)
-    # add_website(connection, example_response_data)
+    add_url(connection, example_response_data)
+    add_website(connection, example_response_data)
 
     example_interaction_data = {
         'url': "https://www.bbc.co.uk",
