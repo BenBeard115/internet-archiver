@@ -110,24 +110,24 @@ def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame
 
 def make_hourly_tracker_line(data: pd.DataFrame):
     """Makes an hourly visit tracker."""
-    st.subheader("Websites Saved")
+    st.subheader("Hourly Website Activity")
 
     saved = alt.Chart(data).mark_line().encode(
         x=alt.X("hours(interact_at):O").title("Time"),
-        y=alt.Y("count(url):Q").title("Archives Saved"),
-        color="type").configure_line(color="#d15353")
+        y=alt.Y("count(url):Q").title("Archive Number"),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])))
 
     st.altair_chart(saved, use_container_width=True)
 
 
 def make_daily_tracker_line(data: pd.DataFrame):
     """Makes an daily archive tracker."""
-    st.subheader("Daily Archives Visited")
+    st.subheader("Daily Website Activity")
 
     archived = alt.Chart(data).mark_line().encode(
         x=alt.X("monthdate(interact_at):O").title("Time"),
         y=alt.Y("visit_count:Q").title("Archives Visited"),
-        color="type").configure_line(color="#d15353")
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])))
 
     st.altair_chart(archived, use_container_width=True)
 
@@ -135,7 +135,6 @@ def make_daily_tracker_line(data: pd.DataFrame):
 def make_popular_visit_bar(data: pd.DataFrame):
     """Makes a bar chart for the most popular sites to archive."""
     st.subheader("Popular Archives")
-    # TODO Add text to each bar of the number of visits (only possible when visits added)
     # Gets the 5 most popular websites
     data = data.groupby(['url_alias', 'type'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(5)
@@ -143,30 +142,34 @@ def make_popular_visit_bar(data: pd.DataFrame):
     archives = alt.Chart(data).mark_bar().encode(
         x=alt.X("Count").title(
             "Count"),
-        y=alt.Y("type").title(
-            "Type"),
-        color="type",
-        row=alt.Row('url_alias')).properties(height=70)
+        y=alt.Y("type", axis=None).title(
+            "Type").sort("-x"),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])),
+        row=alt.Row('url_alias').sort("descending").title("URL")).properties(height=70, width=800)
 
-    st.altair_chart(archives, use_container_width=True)
+    st.altair_chart(archives)
 
 
-def make_popular_save_bar(data: pd.DataFrame):
-    """Makes a bar chart for the most popular sites to archive."""
-    st.subheader("Popular Saves")
-    # TODO Add text to each bar of the number of visits (only possible when visits added)
-    # Gets the 5 most popular websites
-    data = data[data["type"] == 'save']
-    data = data.groupby(['url_alias'])['url_alias'].count().reset_index(
+def make_popular_genre_visit_bar(data):
+    st.subheader("Popular Genres")
+    # Gets the 5 most popular genres
+    data = data.groupby(['genre', 'type'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(5)
 
-    archives = alt.Chart(data).mark_bar().encode(x=alt.X("Count").title("Save Count"),
-                                                 y=alt.Y("url_alias").title(
-                                                     "Website").sort("-y")).configure_bar(
-                                                         color="#d15353").properties(height=350)
+    genre = alt.Chart(data).mark_bar().encode(
+        x=alt.X("Count").title(
+            "Count"),
+        y=alt.Y("type", axis=None).title(
+            "Type").sort("-x"),
+        color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])),
+        row=alt.Row('genre').sort("descending").title("Genre")).properties(height=70, width=800)
 
-    st.altair_chart(archives, use_container_width=True)
+    st.altair_chart(genre)
 
 
-def make_popular_genre_visit_bar():
-    pass
+def make_recent_archive_database(data):
+    st.subheader("Archives")
+    # Filter out auto-scraping
+    data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
+
+    st.dataframe(data)

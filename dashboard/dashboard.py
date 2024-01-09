@@ -16,8 +16,9 @@ from dashboard_functions import (
     make_date_radio,
     make_daily_tracker_line,
     make_hourly_tracker_line,
+    make_popular_genre_visit_bar,
     make_popular_visit_bar,
-    make_popular_save_bar)
+    make_recent_archive_database)
 
 
 def make_url_alias(url):
@@ -67,6 +68,7 @@ if __name__ == "__main__":
     if selected_date_interaction_df.shape[0] > 0:
         make_popular_visit_bar(selected_date_interaction_df)
 
-        col1, col2 = st.columns(2)
-        with col2:
-            make_popular_save_bar(selected_date_interaction_df)
+        make_popular_genre_visit_bar(selected_date_interaction_df)
+
+    if selected_date_scrape_df.shape[0] > 0:
+        make_recent_archive_database(selected_date_scrape_df)
