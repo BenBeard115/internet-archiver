@@ -1,5 +1,4 @@
 """Unit tests for the load.py file."""
-
 from unittest.mock import MagicMock
 
 from pytest import raises
