@@ -9,6 +9,8 @@ from download_screenshot import download_data_file, get_s3_client
 
 BUCKET = 'c9-internet-archiver-bucket'
 
+# TODO Add most popular site with screenshot, Add proper sorting to grouped bar charts
+
 
 def make_metrics(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame) -> None:
     archives = scrape_data[scrape_data["is_human"] == True]['url'].count()
@@ -201,9 +203,6 @@ def make_recent_archive_database(data: pd.DataFrame) -> None:
     data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
 
     st.dataframe(data)
-
-
-# TODO Add most popular site with screenshot
 
 
 def get_popular_screenshot(data):
