@@ -2,8 +2,12 @@
 import pandas as pd
 import altair as alt
 import streamlit as st
+from PIL import Image
 
-# TODO Add website url, last accessed/scraped
+
+from download_screenshot import download_data_file, get_s3_client
+
+BUCKET = 'c9-internet-archiver-bucket'
 
 
 def make_metrics(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame) -> None:
@@ -197,3 +201,26 @@ def make_recent_archive_database(data: pd.DataFrame) -> None:
     data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
 
     st.dataframe(data)
+
+
+# TODO Add most popular site with screenshot
+
+
+def get_popular_screenshot(data):
+    s3_client = get_s3_client()
+
+    test_s3_ref = data[data["url"] ==
+                       "https://www.bbc.co.uk"].tail(1).iloc[0]['screenshot_s3_ref']
+    print(test_s3_ref)
+
+    test_s3_ref = "www.youtube.co.uk/YouTube/2024-01-09T09:59:10.205505.png"
+
+    download_data_file(
+        s3_client, BUCKET, test_s3_ref, "screenshots")
+
+    screenshot = Image.open(
+        "./screenshots/www.youtube.co.uk-YouTube-2024-01-09T09:59:10.205505.png")
+
+    st.subheader("Most Popular Site")
+    st.text("Youtube with 5 visits.")
+    st.image(screenshot)

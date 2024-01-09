@@ -17,7 +17,11 @@ from dashboard_functions import (
     make_popular_genre_visit_bar,
     make_popular_visit_bar,
     make_recent_archive_database,
-    make_metrics)
+    make_metrics,
+    get_popular_screenshot)
+
+
+BUCKET = 'c9-internet-archiver-bucket'
 
 
 def make_url_alias(url):
@@ -77,5 +81,12 @@ if __name__ == "__main__":
 
         make_popular_genre_visit_bar(selected_date_interaction_df)
 
-    if selected_date_scrape_df.shape[0] > 0:
-        make_recent_archive_database(selected_date_scrape_df)
+    col1, col2 = st.columns(2)
+    with col1:
+        if selected_date_scrape_df.shape[0] > 0:
+            make_recent_archive_database(selected_date_scrape_df)
+        else:
+            make_recent_archive_database(scrape_df)
+
+    with col2:
+        get_popular_screenshot(scrape_df)

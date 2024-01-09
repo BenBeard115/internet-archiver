@@ -32,7 +32,7 @@ def get_all_scrape_data(conn: extensions.connection):
     logging.info("Extracting data...")
     query = sql.SQL("""
                     SELECT 
-                        url, genre, scrape_at, is_human
+                        url, genre, scrape_at, is_human, screenshot_s3_ref
                     FROM 
                         url
                     JOIN 
@@ -47,7 +47,7 @@ def get_all_scrape_data(conn: extensions.connection):
     logging.info("Scrape Data Extracted --- %ss.",
                  round(perf_counter() - extract_time, 3))
 
-    return pd.DataFrame(rows, columns=["url", "genre", "scrape_at", "is_human"])
+    return pd.DataFrame(rows, columns=["url", "genre", "scrape_at", "is_human", "screenshot_s3_ref"])
 
 
 def get_all_interaction_data(conn: extensions.connection):
@@ -74,4 +74,3 @@ def get_all_interaction_data(conn: extensions.connection):
                  round(perf_counter() - extract_time, 3))
 
     return pd.DataFrame(rows, columns=["url", "genre", "interact_at", "type"])
-
