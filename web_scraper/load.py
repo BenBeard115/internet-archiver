@@ -97,6 +97,7 @@ def process_css_content(current_soup: BeautifulSoup,
     filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     css_object_key = f"{filename_string}{CSS_FILE_FORMAT}"
 
+
     css_content = current_soup.prettify()
 
     s3_client.put_object(

@@ -38,7 +38,8 @@ from download_from_s3 import (
     filter_keys_by_website,
     get_recent_object_keys,
     format_object_key_titles,
-    get_object_from_s3
+    get_object_from_s3,
+    download_data_file
 )
 
 from chat_gpt_utils import (
@@ -48,6 +49,7 @@ from chat_gpt_utils import (
 DISPLAY_SIZE = (800, 600)
 IMAGE_FILE_FORMAT = '.png'
 HTML_FILE_FORMAT = '.html'
+NUM_OF_SITES_HOMEPAGE = 12
 
 
 load_dotenv()
@@ -158,16 +160,37 @@ def index():
     status = request.args.get('status')
     gpt_summary = request.args.get('summary')
 
+    s3_client = get_s3_client(environ)
+
+    recent_scrapes = get_recent_object_keys(
+        s3_client, environ['S3_BUCKET'], NUM_OF_SITES_HOMEPAGE)
+
+    local_img_files = []
+    screenshot_labels = []
+    for scrape in recent_scrapes:
+
+        local_filename = download_data_file(
+            s3_client, environ['S3_BUCKET'], scrape, 'static')
+
+        local_img_files.append(local_filename)
+        screenshot_labels.append(scrape.split(
+            '/')[0] + '/' + scrape.split('/')[1])
+
+    screenshots = zip(local_img_files, screenshot_labels)
+
     if status == 'success':
         print(gpt_summary)
         return render_template('index.html',
                                result='Save successful!',
                                gpt_summary=gpt_summary,
+                               screenshots=screenshots
                                )
     elif status == 'failure':
-        return render_template('index.html', result='Sorry, that webpage is not currently supported.')
+        return render_template('index.html',
+                               result='Sorry, that webpage is not currently supported.',
+                               screenshots=screenshots)
     else:
-        return render_template('index.html')
+        return render_template('index.html', screenshots=screenshots)
 
 
 # Redirect to saved template page... with details
@@ -203,7 +226,8 @@ def save():
             'screenshot_s3_ref': img_object_key_s3,
             'scrape_at': timestamp,
             'summary': gpt_summary,
-            'is_human': True
+            'is_human': True,
+            'genre': ''
         }
 
         upload_scrape_to_database(response_data)

@@ -48,7 +48,25 @@
             View All Saved Pages
         </button>
 
-        </main>
+
+        <h2>Recent Web Pages</h2>
+        <div>
+            <p>Check out some recently saved pages from users.
+            </p>
+        </div>
+        <hr>
+
+        <div class="menu-container">
+            {% for img_filename, label in screenshots %}
+            <div class="menu-item">
+                <a href="">
+                    <img src="{{ url_for('static', filename=img_filename) }}" alt="Screenshot">
+                    <p>{{ label }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
 </body>
 
 </html>
