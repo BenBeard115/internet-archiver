@@ -4,3 +4,5 @@ streamlit
 altair
 pandas
 pillow
+html2image
+boto3
