@@ -16,7 +16,8 @@ from dashboard_functions import (
     make_hourly_tracker_line,
     make_popular_genre_visit_bar,
     make_popular_visit_bar,
-    make_recent_archive_database)
+    make_recent_archive_database,
+    make_metrics)
 
 
 def make_url_alias(url):
@@ -62,6 +63,7 @@ if __name__ == "__main__":
     selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
         selected_date_scrape_df, selected_date_interaction_df)
 
+    make_metrics(selected_website_scrape_df, selected_website_interaction_df)
     make_daily_tracker_line(interaction_df)
 
     if selected_website_interaction_df.shape[0] > 0:
