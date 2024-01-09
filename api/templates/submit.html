@@ -13,7 +13,7 @@
 <body>
     <!-- HEADER COMPONENT -->
 
-        <header class="container text-center">
+    <header class="container text-center">
         <h1 class="display-1">Submit Web Page</h1>
 
 
@@ -37,9 +37,10 @@
         <hr>
 
         <div class="menu-container">
-            {% for img_filename, label in screenshots %}
+            {% for img_filename, label, ts in screenshots %}
             <div class="menu-item">
-                <a href="">
+                <a
+                    href="{{ url_for('display_page_history', label=label, img_filename=img_filename, url=url, timestamp=ts) }}">
                     <img src="{{ url_for('static', filename=img_filename) }}" alt="Screenshot">
                     <p>{{ label }}</p>
                 </a>
@@ -47,17 +48,14 @@
             {% endfor %}
         </div>
         <div>
-    
-        <hr>
-        <button
-        class="btn btn-warning"
-        onclick='window.location.href = "/"'
-        >
-        Return Home
-        </button>
-        <button class="btn btn-warning" onclick='window.location.href = "/archived-pages"'>
-            Search Archived Pages
-        </button>
+
+            <hr>
+            <button class="btn btn-warning" onclick='window.location.href = "/"'>
+                Return Home
+            </button>
+            <button class="btn btn-warning" onclick='window.location.href = "/archived-pages"'>
+                Search Archived Pages
+            </button>
 </body>
 
 </html>

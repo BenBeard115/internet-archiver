@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+    <title>Webpage Capture History</title>
+</head>
+
+
+
+
+
+
+<body>
+
+    <h1>Webpage Capture History</h1>
+
+    <h2>{{ label }}</h2>
+    <h2>{{ img_filename }}</h2>
+    <h2>{{ timestamp }}</h2>
+
+    <hr>
+
+    {% for html_file, img_file, ts in pages %}
+    <a href="{{ url_for('display_page_instance', image_filename=img_file, label=label)}}">
+        <div class="capture-instance">
+
+            <img src="{{ url_for('static', filename='img/' + img_file) }}" alt="Webpage Thumbnail" height="350">
+            <div class="metadata">
+                <h2>{{ ts }}</h2>
+                <p>Download: {{ html_file }}</p>
+                <!-- Add other metadata fields -->
+            </div>
+
+        </div>
+    </a>
+    {% endfor %}
+</body>
+
+</html>
