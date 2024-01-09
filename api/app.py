@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import os
 from os import environ
 import requests
+from connect import get_connection
 
 from boto3 import client
 from bs4 import BeautifulSoup
@@ -30,13 +31,17 @@ from upload_to_database import (
     add_interaction
 )
 
-from connect import get_connection
+from extract_from_database import (
+    get_connection,
+    get_url
+)
 
 from download_from_s3 import (
     get_object_keys,
     filter_keys_by_type,
     filter_keys_by_website,
     get_recent_png_s3_keys,
+    get_recent_html_s3_keys,
     format_object_key_titles,
     get_object_from_s3,
     download_data_file,
@@ -186,31 +191,37 @@ def submit():
     timestamp = request.args.get('timestamp')
 
     s3_client = get_s3_client(environ)
+    connection = get_connection(environ)
 
-    recent_scrapes = get_recent_png_s3_keys(
+    recent_screenshots = get_recent_png_s3_keys(
         s3_client, environ['S3_BUCKET'], NUM_OF_SITES_HOMEPAGE)
 
-    local_img_files = []
+    recent_html_files = [screenshot.replace(
+        '.png', '.html') for screenshot in recent_screenshots]
+
+    urls = [get_url(html, connection) for html in recent_html_files]
+
+    local_screenshot_files = []
     screenshot_labels = []
     timestamps = []
-    for scrape in recent_scrapes:
-
-        print(scrape)
-
+    for scrape in recent_screenshots:
         local_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], scrape, 'static')
 
-        local_img_files.append(local_filename)
+        local_screenshot_files.append(local_filename)
         screenshot_labels.append(scrape.split(
             '/')[0] + '/' + scrape.split('/')[1])
 
         timestamp = scrape.split('/')[-1].replace('.png', '')
         timestamps.append(timestamp)
 
-    print(local_img_files)
-    screenshots = zip(local_img_files, screenshot_labels, timestamps)
+    page_info = zip(local_screenshot_files,
+                    screenshot_labels,
+                    timestamps,
+                    recent_html_files,
+                    urls)
 
-    return render_template('submit.html', screenshots=screenshots)
+    return render_template('submit.html', page_info=page_info)
 
 
 @app.route('/save', methods=['POST'])
@@ -305,20 +316,20 @@ def display_page_history():
 
     s3_client = get_s3_client(environ)
 
-    # url = request.args.get('url')
-    # timestamp = request.args.get('timestamp')
-    img_filename = request.args.get('img_filename')
-    print(img_filename)
-    # Looks like this: theculturetrip.com-Private Trips-2024-01-09T09:59:06.928136.png
+    local_img_filename = request.args.get('local_img_filename')
+    screenshot_label = request.args.get('screenshot_label')
+    timestamp = request.args.get('timestamp')
+    html_key = request.args.get('html_key')
+    url = request.args.get('url')
 
-    html_filename = img_filename.replace('.png', '.html').replace('_', '/')
-    print(html_filename)
-
-    label = request.args.get('label')
-    # Looks like this: theculturetrip.com/Private Trips
+    print(local_img_filename)
+    print(screenshot_label)
+    print(timestamp)
+    print(html_key)
+    print(url)
 
     html_files = get_all_pages_ordered(
-        s3_client, html_filename, environ['S3_BUCKET'])
+        s3_client, html_key, environ['S3_BUCKET'])
 
     img_files = get_all_screenshots(html_files)
 
@@ -326,29 +337,6 @@ def display_page_history():
     formatted_ts = format_timestamps(scrape_times)
 
     pages = zip(html_files, img_files, formatted_ts)
-
-    """
-    VISIT COUNTER:
-    Every time this endpoint is visited, add log to user_interaction
-    with:
-        - interaction_id (serial)
-        - url_id (get reference) - get matching ID
-        - type_id (save (2) or visit (1)) - this will be a 'view'
-        - timestamp (interaction) - create timestamp and submit
-
-    IF VIEW:
-        We have label and img_filename:
-            FIND WAY TO GET RELEVANT URL and TIMESTAMP from these two variables
-        Create interaction dictionary
-        Set up DB connection
-        add_interaction() for visit
-    
-    IF SAVE:
-        Take in arguments (url, timestamp?, is_save?)
-        Create interaction dictionary
-        Set up DB connection
-        add_url() for save
-    """
 
     # timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)
     # print(timestamp, type(timestamp))
@@ -364,23 +352,30 @@ def display_page_history():
     # upload_interaction_to_database(interaction_data)
 
     return render_template('page_history.html',
-                           label=label,
-                           pages=pages)
+                           pages=pages,
+                           url=url,
+                           screenshot_label=screenshot_label)
 
 
 @app.get("/display-page")
-def display_page():
+def display_page_instance():
     """Navigates to page of specific url with html embedded and download link."""
 
-    url = request.args['display']
-    html_filename = request.args['filename']
+    url = request.args.get('url')
+    html_key = request.args.get('html_file')
+    timestamp = request.args.get('timestamp')
+
+    # html_filename = 'www.bbc.co.uk/BBC - Home/2024-01-09T09:59:02.332864.html'
     s3_client = get_s3_client(environ)
 
     html_object = get_object_from_s3(
-        s3_client, environ['S3_BUCKET'], html_filename)
+        s3_client, environ['S3_BUCKET'], html_key)
     html_content_base64 = base64.b64encode(html_object.encode()).decode()
 
-    return render_template('display.html', url=url, html_content=html_content_base64)
+    return render_template('display_page_instance.html',
+                           html_content=html_content_base64,
+                           url=url,
+                           timestamp=timestamp)
 
 
 @app.route('/download/<filename>')

@@ -14,7 +14,10 @@
     <!-- HEADER COMPONENT -->
 
     <header class="container text-center">
-        <h1 class="display-1">Submit Web Page</h1>
+        <h1 class="display-1">📄 Submit Webpage</h1>
+
+        <h2 class="submit-webpage">Once submitted, we'll capture an instance of the webpage every 3 hours allowing you
+            to track the evolution of its content.</h2>
 
 
         <form action="/save" method="post">
@@ -37,10 +40,10 @@
         <hr>
 
         <div class="menu-container">
-            {% for img_filename, label, ts in screenshots %}
+            {% for img_filename, label, ts, html_key, url in page_info %}
             <div class="menu-item">
                 <a
-                    href="{{ url_for('display_page_history', label=label, img_filename=img_filename, url=url, timestamp=ts) }}">
+                    href="{{ url_for('display_page_history', local_img_filename=img_filename, screenshot_label=label, timestamp=ts, html_key=html_key, url=url) }}">
                     <img src="{{ url_for('static', filename=img_filename) }}" alt="Screenshot">
                     <p>{{ label }}</p>
                 </a>

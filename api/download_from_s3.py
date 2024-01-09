@@ -45,7 +45,7 @@ def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
 
 
 def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
-    """Returns a list of the 'num_files' most recent object keys uploaded to S3."""
+    """Returns a list of the most recent .png keys uploaded to S3."""
 
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
 
@@ -54,6 +54,21 @@ def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) 
 
     recent_keys = [
         o['Key'] for o in sorted_contents if '.png' in o["Key"]
+    ][:num_files]
+
+    return recent_keys
+
+
+def get_recent_html_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
+    """Returns a list of the most recent .html keys uploaded to S3."""
+
+    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+
+    sorted_contents = sorted(
+        contents, key=lambda x: x['LastModified'], reverse=True)
+
+    recent_keys = [
+        o['Key'] for o in sorted_contents if '.html' in o["Key"]
     ][:num_files]
 
     return recent_keys
@@ -97,9 +112,9 @@ def get_all_pages_ordered(s3_client: client, html_filename: str, bucket: str) ->
 
 
 def get_all_screenshots(html_files: list[str]) -> list[str]:
-    """Gets all corresponding screenshots of a webpage."""
+    """Gets all previous screenshots of a webpage given an html key."""
 
-    return [filename.replace('.html', '.png') for filename in html_files]
+    return [filename.replace('.html', '.png').replace('/', '_') for filename in html_files]
 
 
 def get_scrape_times(html_files: list[str]) -> list[str]:
