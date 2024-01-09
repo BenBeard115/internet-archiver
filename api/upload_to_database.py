@@ -134,7 +134,23 @@ def add_website(conn: extensions.connection, response_data: dict) -> None:
 
     logging.info("Website Uploaded --- %ss.",
                  round(perf_counter() - upload_time, 3))
+    
 
+def get_url(s3_ref: str, conn: extensions.connection) -> str:
+    """Gets the url from the database, given an s3_ref."""
+
+    query = f"""SELECT url FROM url
+                 JOIN page_scrape ON url.url_id = page_scrape.url_id
+                 WHERE html_s3_ref LIKE '%{s3_ref}%'"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        url_extract = cur.fetchall()[0][0]
+    
+    if url_extract == []:
+        raise KeyError("There were no values with that reference!")
+    
+    return url_extract
 
 if __name__ == "__main__":
     load_dotenv()
@@ -164,3 +180,4 @@ if __name__ == "__main__":
 
     add_url(connection, example_interaction_data)
     add_interaction(connection, example_interaction_data)
+
