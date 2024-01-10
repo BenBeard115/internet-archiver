@@ -32,7 +32,9 @@ def make_url_alias(url: str) -> str:
 
 def make_shorter_alias(url_alias: str) -> str:
     """Returns a shorter url alias for graphs."""
-    return url_alias[:8] + '...'
+    if len(url_alias) >= 8:
+        return url_alias[:8] + '...'
+    return url_alias
 
 
 def setup_database(connection: extensions.connection) -> tuple[pd.DataFrame]:

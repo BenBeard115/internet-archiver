@@ -63,6 +63,8 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-auto-scraper-taskdef" {
                 { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY },
                 { name: "URL_TABLE_NAME", value: var.URL_TABLE_NAME },
                 { name: "SCRAPE_TABLE_NAME", value: var.SCRAPE_TABLE_NAME }
+
+                
             ],
             "logConfiguration": {
             "logDriver": "awslogs",
@@ -224,7 +226,9 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-dashboard-taskdef" {
                 { name: "DB_PORT", value: var.DB_PORT },
                 { name: "DB_NAME", value: var.DB_NAME },
                 { name: "DB_USERNAME", value: var.DB_USERNAME},
-                { name: "DB_PASSWORD", value: var.DB_PASSWORD }
+                { name: "DB_PASSWORD", value: var.DB_PASSWORD },
+                { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
+                { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY }
             ]
         }
     ])
@@ -293,6 +297,7 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-website-taskdef" {
                 { name: "S3_BUCKET", value: var.S3_BUCKET },
                 { name: "URL_TABLE_NAME", value: var.URL_TABLE_NAME },
                 { name: "SCRAPE_TABLE_NAME", value: var.SCRAPE_TABLE_NAME },
+                { name: "OPENAI_API_KEY", value: var.OPENAI_API_KEY }
                 
             ]
         }

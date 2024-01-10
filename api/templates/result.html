@@ -14,14 +14,17 @@
     <h1 class="display-2">Search results for: <strong>"{{ input }}"</strong></h1>
     <hr>
     <ul>
-        {% for l in links %}
-        <li>
-            <a href="{{ url_for('display_page_instance', display=l.display, html_file=l.filename)}}" target="_blank">{{
-                l.display }}</a>
-
-
-        </li>
-        {% endfor %}
+        <div class="menu-container">
+            {% for img_filename, label, ts, html_key, url in page_info %}
+            <div class="menu-item">
+                <a
+                    href="{{ url_for('display_page_history', local_img_filename=img_filename, screenshot_label=label, timestamp=ts, html_key=html_key, url=url) }}">
+                    <img src="{{ url_for('static', filename=img_filename) }}" alt="Screenshot">
+                    <p>{{ label }}</p>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
     </ul>
     <hr>
     <button class="btn btn-warning" onclick='window.location.href = "/"'>
