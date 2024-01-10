@@ -50,7 +50,8 @@ from download_from_s3 import (
     get_all_screenshots,
     get_scrape_times,
     format_timestamps,
-    get_relevant_html_keys_for_url
+    get_relevant_html_keys_for_url,
+    get_relevant_png_keys_for_url
 )
 
 from chat_gpt_utils import (
@@ -148,7 +149,7 @@ def retrieve_searched_for_pages(input: str):
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     if keys is None:
         return 'Empty Database!'
-    
+
     html_keys = filter_keys_by_type(keys, '.html')
     relevant_keys = filter_keys_by_website(html_keys, input)
 
@@ -190,7 +191,7 @@ def index():
 def submit():
     """Main page of website."""
 
-    #do we still need these?
+    # do we still need these?
     status = request.args.get('status')
     gpt_summary = request.args.get('summary')
     url = request.args.get('url')
@@ -216,7 +217,7 @@ def submit():
         local_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], scrape, 'static')
         if local_filename is None:
-             return render_template('submit.html')
+            return render_template('submit.html')
 
         local_screenshot_files.append(local_filename)
         screenshot_labels.append(scrape.split(
@@ -310,15 +311,18 @@ def view_archived_pages():
     connection = get_connection(environ)
 
     urls = get_most_popular_urls(connection)
-    popular_html_files = []
+    print(f"URLS: {urls}")
+    popular_screenshots = []
     for url in urls:
-        relevant_keys = get_relevant_html_keys_for_url(
+        relevant_keys = get_relevant_png_keys_for_url(
             s3_client, environ['S3_BUCKET'], url)
         print(relevant_keys)
-        popular_html_files += relevant_keys
+        popular_screenshots += relevant_keys
 
-    popular_screenshots = [html_file.replace(
-        '.html', '.png', ) for html_file in popular_html_files]
+    print(f"POPULAR SCREENSHOTS: {popular_screenshots}")
+
+    popular_html_files = [png_file.replace(
+        '.png', '.html', ) for png_file in popular_screenshots]
 
     local_screenshot_files = []
     screenshot_labels = []
@@ -341,7 +345,6 @@ def view_archived_pages():
                     urls)
 
     return render_template('archived_pages.html', page_info=page_info)
-
 
 
 @app.get("/result/<input>")
@@ -433,6 +436,7 @@ def limitations():
     """Renders the web page that states the limitations of our application at its current stage."""
 
     return render_template('limitations.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')

@@ -144,11 +144,22 @@ def format_timestamps(timestamps: list[str]) -> list[str]:
     return [datetime.strptime(
         ts, "%Y-%m-%dT%H:%M:%S.%f").strftime(USER_FRIENDLY_FORMAT) for ts in timestamps]
 
-def get_relevant_html_keys_for_url(s3_client: client, bucket: str, url:str) -> list[str]:
+
+def get_relevant_html_keys_for_url(s3_client: client, bucket: str, url: str) -> list[str]:
     """Returns a list of object keys from a given bucket, given a constraint."""
     url_without_https = url[8:]
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
+
     return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.html')]
+
+
+def get_relevant_png_keys_for_url(s3_client: client, bucket: str, url: str) -> list[str]:
+    """Returns a list of object keys from a given bucket, given a constraint."""
+    url_without_https = url[8:]
+    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+
+    return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.png')]
+
 
 if __name__ == "__main__":
 
@@ -167,14 +178,10 @@ if __name__ == "__main__":
     # get_object_from_s3(
     #     s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")
 
-    
     urls = ['https://www.youtube.co.uk', 'https://www.bbc.co.uk/news/uk-politics-62064552', 'https://www.itv.co.uk', 'https://www.bbc.co.uk',
-        'https://www.theguardian.com/film/2023/dec/31/raging-grace-review-gothic-infused-filipina-immigrant-thriller-paris-zarcilla']
-    
-  
+            'https://www.theguardian.com/film/2023/dec/31/raging-grace-review-gothic-infused-filipina-immigrant-thriller-paris-zarcilla']
 
     for url in urls:
         print(url[8:])
-        print(get_relevant_html_keys_for_url(s3_client, environ['S3_BUCKET'], url))
-    
-
+        print(get_relevant_html_keys_for_url(
+            s3_client, environ['S3_BUCKET'], url))
