@@ -30,7 +30,6 @@ def load_all_data(conn: extensions.connection) -> set:
                     {environ["URL_TABLE_NAME"]}.url_id = {environ["SCRAPE_TABLE_NAME"]}.url_id
                     """)
         urls = cur.fetchall()
-        conn.close()
 
         if len(urls) == 0:
             raise ValueError("No urls were found!")
@@ -53,5 +52,7 @@ if __name__ == "__main__":
     connection = get_database_connection()
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
+
+    connection.close()
 
     print(f"Extract phase complete --- {perf_counter() - startup}s.")

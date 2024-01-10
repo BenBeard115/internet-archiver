@@ -157,7 +157,6 @@ def add_website(conn: extensions.connection, current_response_data: dict, curren
             current_response_data["url_id"] = cur.fetchall()[0][0]
         except IndexError:
             return
-        conn.close()
 
     query = sql.SQL("""
                     INSERT INTO {table} 
@@ -186,7 +185,6 @@ def add_website(conn: extensions.connection, current_response_data: dict, curren
     with conn.cursor() as cur:
         cur.execute(query)
         conn.commit()
-        conn.close()
 
 
 if __name__ == "__main__":
@@ -226,5 +224,7 @@ if __name__ == "__main__":
 
         if html_file_name and img_file_name and css_file_name:
             add_website(connection, response_data, url)
+
+    connection.close()
 
     print(f"Data uploaded --- {perf_counter() - download}s.")

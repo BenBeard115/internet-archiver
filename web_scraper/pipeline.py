@@ -57,5 +57,7 @@ if __name__ == "__main__":
         if html_file_name and img_file_name and css_file_name:
             add_website(connection, response_data, url)
 
+    connection.close()
+
     print(f"Data uploaded --- {perf_counter() - download}s.")
     print(f"Pipeline complete --- {perf_counter() - startup}s.")
