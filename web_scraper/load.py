@@ -157,6 +157,7 @@ def add_website(conn: extensions.connection, current_response_data: dict, curren
             current_response_data["url_id"] = cur.fetchall()[0][0]
         except IndexError:
             return
+        conn.close()
 
     query = sql.SQL("""
                     INSERT INTO {table} 
@@ -185,6 +186,7 @@ def add_website(conn: extensions.connection, current_response_data: dict, curren
     with conn.cursor() as cur:
         cur.execute(query)
         conn.commit()
+        conn.close()
 
 
 if __name__ == "__main__":
