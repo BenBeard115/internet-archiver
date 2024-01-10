@@ -176,6 +176,9 @@ def make_popular_visit_bar(data: pd.DataFrame) -> None:
     data = data.groupby(['url_alias', 'type'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(5)
 
+    data["url_alias"] = data["url_alias"][:3]
+    print(data["url_alias"])
+
     archives = alt.Chart(data).mark_bar().encode(
         x=alt.X("Count").title(
             "Count"),
@@ -233,7 +236,6 @@ def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataF
 
     s3_ref = scrape_data[scrape_data["url"] == popular_website["url"]].tail(
         1).iloc[0]['screenshot_s3_ref']
-    print(s3_ref)
 
     download_data_file(
         s3_client, BUCKET, s3_ref, "screenshots")
