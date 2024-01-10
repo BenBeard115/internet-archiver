@@ -207,6 +207,7 @@ def submit():
         '.png', '.html') for screenshot in recent_screenshots]
 
     urls = [get_url(html, connection) for html in recent_html_files]
+    print(urls)
 
     local_screenshot_files = []
     screenshot_labels = []
@@ -381,18 +382,18 @@ def display_page_history():
 
     pages = zip(html_files, img_files, formatted_ts)
 
-    # timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)
-    # print(timestamp, type(timestamp))
+    timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)
+    print(timestamp, type(timestamp))
 
-    # interaction_data = {
-    #     'url': 'https://www.bbc.co.uk/news/uk-politics-62064552',
-    #     'type': 'visit',
-    #     'interact_at': datetime(2024, 1, 9, 11, 15, 14)
-    # }
+    interaction_data = {
+        'url': url,
+        'type': 'visit',
+        'interact_at': timestamp
+    }
 
-    # print(interaction_data)
+    print(interaction_data)
 
-    # upload_interaction_to_database(interaction_data)
+    upload_interaction_to_database(interaction_data)
 
     return render_template('page_history.html',
                            pages=pages,
@@ -408,7 +409,6 @@ def display_page_instance():
     html_key = request.args.get('html_file')
     timestamp = request.args.get('timestamp')
 
-    # html_key = 'https://www.bbc.co.uk/news/business-67911127'
     s3_client = get_s3_client(environ)
 
     html_object = get_object_from_s3(
