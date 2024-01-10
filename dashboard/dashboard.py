@@ -6,6 +6,8 @@ import re
 from dotenv import load_dotenv
 import streamlit as st
 from PIL import Image
+import pandas as pd
+from psycopg2 import extensions
 
 from extract import get_connection, get_all_scrape_data, get_all_interaction_data
 from dashboard_functions import (
@@ -24,19 +26,21 @@ from dashboard_functions import (
 BUCKET = 'c9-internet-archiver-bucket'
 
 
-def make_url_alias(url):
+def make_url_alias(url: str) -> str:
     """Makes an alias for the url."""
     regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
     match = re.search(regex_pattern, url)
     return match.group(3)
 
 
-def setup_database():
-    """Sets up the database."""
-    load_dotenv()
-    logging.getLogger().setLevel(logging.INFO)
+def make_shorter_alias(url_alias: str) -> str:
+    """Returns a shorter url alias for graphs."""
+    return url_alias[:4]
 
-    connection = get_connection(environ)
+
+def setup_database(connection: extensions.connection) -> tuple[pd.DataFrame]:
+    """Sets up the database."""
+    logging.getLogger().setLevel(logging.INFO)
 
     scrape_df = get_all_scrape_data(connection)
     scrape_df["url_alias"] = scrape_df["url"].apply(make_url_alias)
@@ -58,7 +62,9 @@ def setup_page():
 
 
 if __name__ == "__main__":
-    scrape_df, interaction_df = setup_database()
+    load_dotenv()
+    connection = get_connection(environ)
+    scrape_df, interaction_df = setup_database(connection)
     setup_page()
 
     st.sidebar.write(
@@ -89,4 +95,11 @@ if __name__ == "__main__":
             make_recent_archive_database(scrape_df)
 
     with col2:
-        get_popular_screenshot(scrape_df)
+        if selected_website_interaction_df.shape[0] > 0 and selected_website_scrape_df.shape[0] > 0:
+            get_popular_screenshot(
+                selected_website_scrape_df, selected_website_interaction_df)
+
+        else:
+            get_popular_screenshot(scrape_df, interaction_df)
+
+    connection.close()

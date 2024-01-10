@@ -5,6 +5,7 @@ WORKDIR dashboard
 COPY archive_image.png .
 COPY requirements.txt .
 
+RUN mkdir ./screenshots
 RUN pip3 install -r requirements.txt
 
 EXPOSE 8501
