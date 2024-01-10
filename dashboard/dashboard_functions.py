@@ -173,11 +173,8 @@ def make_popular_visit_bar(data: pd.DataFrame) -> None:
 
     st.subheader("Popular Archives")
     # Gets the 5 most popular websites
-    data = data.groupby(['url_alias', 'type'])['url_alias'].count().reset_index(
+    data = data.groupby(['url_alias', 'type', 'url_short'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(5)
-
-    data["url_alias"] = data["url_alias"][:3]
-    print(data["url_alias"])
 
     archives = alt.Chart(data).mark_bar().encode(
         x=alt.X("Count").title(
@@ -188,7 +185,7 @@ def make_popular_visit_bar(data: pd.DataFrame) -> None:
         color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
             "Type"),
 
-        row=alt.Row('url_alias').sort("descending").title("URL")).properties(height=70, width=800)
+        row=alt.Row('url_short').sort("descending").title("URL")).properties(height=70, width=800)
 
     st.altair_chart(archives)
 

@@ -23,9 +23,6 @@ from dashboard_functions import (
     get_popular_screenshot)
 
 
-BUCKET = 'c9-internet-archiver-bucket'
-
-
 def make_url_alias(url: str) -> str:
     """Makes an alias for the url."""
     regex_pattern = r'^(https?:\/\/)?((?:www\.)?)([^\/]+)'
@@ -35,7 +32,7 @@ def make_url_alias(url: str) -> str:
 
 def make_shorter_alias(url_alias: str) -> str:
     """Returns a shorter url alias for graphs."""
-    return url_alias[:4]
+    return url_alias[:8] + '...'
 
 
 def setup_database(connection: extensions.connection) -> tuple[pd.DataFrame]:
@@ -43,10 +40,15 @@ def setup_database(connection: extensions.connection) -> tuple[pd.DataFrame]:
     logging.getLogger().setLevel(logging.INFO)
 
     scrape_df = get_all_scrape_data(connection)
+    scrape_df = scrape_df[scrape_df["url"] != "Empty Database!"]
     scrape_df["url_alias"] = scrape_df["url"].apply(make_url_alias)
+    scrape_df["url_short"] = scrape_df["url_alias"].apply(make_shorter_alias)
 
     interaction_df = get_all_interaction_data(connection)
+    interaction_df = interaction_df[interaction_df["url"] != "Empty Database!"]
     interaction_df["url_alias"] = interaction_df["url"].apply(make_url_alias)
+    interaction_df["url_short"] = interaction_df["url_alias"].apply(
+        make_shorter_alias)
     return scrape_df, interaction_df
 
 
@@ -65,6 +67,7 @@ if __name__ == "__main__":
     load_dotenv()
     connection = get_connection(environ)
     scrape_df, interaction_df = setup_database(connection)
+    print(scrape_df)
     setup_page()
 
     st.sidebar.write(
@@ -75,6 +78,8 @@ if __name__ == "__main__":
         scrape_df, interaction_df, radio)
     selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
         selected_date_scrape_df, selected_date_interaction_df)
+
+    print(selected_date_interaction_df)
 
     make_metrics(selected_website_scrape_df, selected_website_interaction_df)
     make_daily_tracker_line(interaction_df)
