@@ -11,6 +11,7 @@ RUN pip3 install -r requirements.txt
 EXPOSE 8501
 
 COPY extract.py .
+COPY donwload_screenshot.py .
 COPY dashboard_functions.py .
 COPY dashboard.py .
 
