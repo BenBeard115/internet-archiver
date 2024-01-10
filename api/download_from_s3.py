@@ -155,7 +155,11 @@ def get_relevant_html_keys_for_url(s3_client: client, bucket: str, url: str) -> 
 
 def get_relevant_png_keys_for_url(s3_client: client, bucket: str, url: str) -> list[str]:
     """Returns a list of object keys from a given bucket, given a constraint."""
-    url_without_https = url[8:]
+    if 'https' in url:
+        url_without_https = url[8:]
+    else:
+        url_without_https = url
+
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
 
     return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.png')]

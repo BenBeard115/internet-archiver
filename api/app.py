@@ -140,21 +140,19 @@ def get_most_recently_saved_web_pages() -> dict:
     return pages
 
 
-def retrieve_searched_for_pages(input: str):
+def retrieve_searched_for_pages(s3_client: client, input: str):
     """Get the relevant pages that have been searched for."""
+
     pages = []
-    s3_client = client('s3',
-                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
-                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     if keys is None:
         return 'Empty Database!'
 
-    html_keys = filter_keys_by_type(keys, '.html')
-    relevant_keys = filter_keys_by_website(html_keys, input)
-
-    for key in relevant_keys:
-        pages.append({'display': key, 'filename': key})
+    png_keys = filter_keys_by_type(keys, '.png')
+    relevant_keys = filter_keys_by_website(png_keys, input)
+    for relevant_key in relevant_keys:
+        display_key = relevant_key.split('/')[0] + '/' + relevant_key.split('/')[1]
+        pages.append(display_key)
     return pages
 
 
@@ -208,7 +206,6 @@ def submit():
         '.png', '.html') for screenshot in recent_screenshots]
 
     urls = [get_url(html, connection) for html in recent_html_files]
-    print(urls)
 
     local_screenshot_files = []
     screenshot_labels = []
@@ -285,8 +282,6 @@ def save():
 
         print(f"Upload successful: {interaction_data}")
 
-        # return redirect(f'/?status=success&summary={gpt_summary}&url={url}&timestamp={timestamp}')
-
         return render_template('page_history.html',
                                img_filename=img_object_key_s3,
                                html_filename=html_object_key,
@@ -311,7 +306,6 @@ def view_archived_pages():
     connection = get_connection(environ)
 
     urls = get_most_popular_urls(connection)
-    print(f"URLS: {urls}")
     popular_screenshots = []
     for url in urls:
         relevant_keys = get_relevant_png_keys_for_url(
@@ -351,10 +345,46 @@ def view_archived_pages():
 def dynamic_page(input):
     """Navigates to a page specific to what the user searched for."""
 
-    url_links = retrieve_searched_for_pages(input)
+    s3_client = get_s3_client(environ)
+
+    url_links = retrieve_searched_for_pages(s3_client, input)
+    url_set = set(url_links)
+
     if len(url_links) == 0:
         return render_template("search_error.html", input=input)
-    return render_template("result.html", input=input, links=url_links)
+
+    popular_screenshots = []
+    for url in url_set:
+        relevant_keys = get_relevant_png_keys_for_url(
+            s3_client, environ['S3_BUCKET'], url)
+
+        popular_screenshots += relevant_keys
+
+    popular_html_files = [png_file.replace(
+        '.png', '.html', ) for png_file in popular_screenshots]
+
+    local_screenshot_files = []
+    screenshot_labels = []
+    timestamps = []
+    for scrape in popular_screenshots:
+        local_filename = download_data_file(
+            s3_client, environ['S3_BUCKET'], scrape, 'static')
+
+        local_screenshot_files.append(local_filename)
+        screenshot_labels.append(scrape.split(
+            '/')[0] + '/' + scrape.split('/')[1])
+
+        timestamp = scrape.split('/')[-1].replace('.png', '')
+        timestamps.append(timestamp)
+
+    page_info = zip(local_screenshot_files,
+                    screenshot_labels,
+                    timestamps,
+                    popular_html_files,
+                    url_links)
+
+
+    return render_template("result.html", input=input, page_info=page_info)
 
 
 @app.route('/page-history')
