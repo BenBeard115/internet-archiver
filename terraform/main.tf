@@ -224,9 +224,7 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-dashboard-taskdef" {
                 { name: "DB_PORT", value: var.DB_PORT },
                 { name: "DB_NAME", value: var.DB_NAME },
                 { name: "DB_USERNAME", value: var.DB_USERNAME},
-                { name: "DB_PASSWORD", value: var.DB_PASSWORD },
-                { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY},
-                { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID}
+                { name: "DB_PASSWORD", value: var.DB_PASSWORD }
             ]
         }
     ])
