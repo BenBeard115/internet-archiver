@@ -1,7 +1,7 @@
 """Script used to insert the re-scraped HTML and CSS files into the S3 bucket."""
 
-from datetime import datetime
-from os import environ, remove
+from datetime import datetime, timezone
+from os import environ, getcwd, remove
 from time import perf_counter
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
@@ -22,6 +22,11 @@ IMAGE_FILE_FORMAT = ".png"
 HTML_FILE_FORMAT = ".html"
 CSS_FILE_FORMAT = ".css"
 IS_HUMAN = False
+
+HTI = Html2Image(custom_flags=["--no-sandbox",
+                               "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
+                               "--use-fake-device-for-media-stream", "--disable-sync"])
+
 
 def get_soup(current_url: str) -> BeautifulSoup:
     """Gets Soup object from url."""
@@ -97,7 +102,6 @@ def process_css_content(current_soup: BeautifulSoup,
     filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     css_object_key = f"{filename_string}{CSS_FILE_FORMAT}"
 
-
     css_content = current_soup.prettify()
 
     s3_client.put_object(
@@ -110,8 +114,7 @@ def process_screenshot(current_url: str,
                        current_domain: str,
                        current_title: str,
                        current_timestamp: str,
-                       s3_client: client,
-                       hti_object: Html2Image) -> str:
+                       s3_client: client) -> str:
     """Takes screenshot of webpage and uploads to S3."""
 
     img_filename_string = f"{current_domain}_{current_title}_{current_timestamp}"
@@ -120,7 +123,7 @@ def process_screenshot(current_url: str,
     filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     img_object_key_s3 = f"{filename_string}{IMAGE_FILE_FORMAT}"
 
-    hti_object.screenshot(url=current_url,
+    HTI.screenshot(url=current_url,
                    size=DISPLAY_SIZE,
                    save_as=img_object_key)
 
@@ -135,6 +138,7 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
     """Uploads a file to the specified S3 bucket."""
 
     try:
+        print(getcwd())
         s3_client.upload_file(filename, bucket, key)
 
     except ClientError:
@@ -190,7 +194,6 @@ def add_website(conn: extensions.connection, current_response_data: dict, curren
 if __name__ == "__main__":
 
     load_dotenv()
-    hti = Html2Image()
     connection = get_database_connection()
 
     startup = perf_counter()
@@ -210,9 +213,9 @@ if __name__ == "__main__":
         soup = get_soup(url)
         title = extract_title(url)
         domain = extract_domain(url)
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc)
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
-        img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
+        img_file_name = process_screenshot(url, domain, title, timestamp, client)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
 
         response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name,

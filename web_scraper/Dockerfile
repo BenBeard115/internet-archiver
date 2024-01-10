@@ -1,6 +1,9 @@
 FROM python:latest
 
-WORKDIR /web_scraper
+RUN apt-get update -y && apt-get install -y chromium dbus
+
+RUN mkdir -p /run/dbus
+RUN dbus-daemon --system
 
 COPY requirements.txt .
 RUN pip3 install -r requirements.txt

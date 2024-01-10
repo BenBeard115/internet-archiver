@@ -2,7 +2,7 @@
 
 from time import perf_counter
 from os import environ
-from datetime import datetime
+from datetime import datetime, timezone
 
 from dotenv import load_dotenv
 from boto3 import client
@@ -14,6 +14,7 @@ from load import (add_website, get_soup, extract_title,
                   process_screenshot, process_css_content)
 
 IS_HUMAN = False
+HTI = Html2Image()
 
 if __name__ == "__main__":
 
@@ -25,7 +26,6 @@ if __name__ == "__main__":
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
 
-    hti = Html2Image()
 
     connecting_time = perf_counter()
     print("Connecting to S3...")
@@ -41,9 +41,9 @@ if __name__ == "__main__":
         soup = get_soup(url)
         title = extract_title(url)
         domain = extract_domain(url)
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc)
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
-        img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
+        img_file_name = process_screenshot(url, domain, title, timestamp, client)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
 
         response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name,
