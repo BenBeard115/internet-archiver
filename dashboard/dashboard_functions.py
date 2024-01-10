@@ -1,4 +1,6 @@
 """Script containing functions to make the graphs on the dashboard."""
+import os
+
 import pandas as pd
 import altair as alt
 import streamlit as st
@@ -9,10 +11,11 @@ from download_screenshot import download_data_file, get_s3_client
 
 BUCKET = 'c9-internet-archiver-bucket'
 
-# TODO Add most popular site with screenshot, Add proper sorting to grouped bar charts
+# TODO Add proper sorting to grouped bar charts
 
 
 def make_metrics(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame) -> None:
+    """Creates metrics for number of archives, visits and saves."""
     archives = scrape_data[scrape_data["is_human"] == True]['url'].count()
     visits = interaction_data[interaction_data["type"]
                               == 'visit']['url'].count()
@@ -52,19 +55,19 @@ def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radi
     st.markdown(
         """
     <style>
-
         div[role="presentation"] div{
             color: white;
         }
     </style>
     """,
-        unsafe_allow_html=True,)
+        unsafe_allow_html=True)
 
     if radio == "Singular Date":
         # Defaults to most recent data
         selected_date = st.sidebar.date_input(
             "Select a date", max_date, key='date_selector', min_value=min_date, max_value=max_date)
-        return scrape_df[scrape_df['scrape_at'].dt.date == selected_date],  interaction_df[interaction_df['interact_at'].dt.date == selected_date]
+        return scrape_df[scrape_df['scrape_at'].dt.date == selected_date], interaction_df[
+            interaction_df['interact_at'].dt.date == selected_date]
 
     if radio == "Date Range":
         selected_date = st.sidebar.date_input(
@@ -72,8 +75,10 @@ def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radi
             min_value=min_date, max_value=max_date)
 
         if len(selected_date) == 2:
-            return scrape_df[(scrape_df['scrape_at'].dt.date >= selected_date[0]) & (scrape_df['scrape_at'].dt.date <= selected_date[1])], interaction_df[(
-                interaction_df['interact_at'].dt.date >= selected_date[0]) & (interaction_df['interact_at'].dt.date <= selected_date[1])]
+            return scrape_df[(scrape_df['scrape_at'].dt.date >= selected_date[0]) & (
+                scrape_df['scrape_at'].dt.date <= selected_date[1])], interaction_df[(
+                    interaction_df['interact_at'].dt.date >= selected_date[0]) & (
+                    interaction_df['interact_at'].dt.date <= selected_date[1])]
 
         return scrape_df[(scrape_df['scrape_at'].dt.date == selected_date[0])], interaction_df[
             (interaction_df['interact_at'].dt.date == selected_date[0])]
@@ -146,7 +151,6 @@ def make_hourly_tracker_line(data: pd.DataFrame) -> None:
         color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
             "Type"))
 
-
     st.altair_chart(saved, use_container_width=True)
 
 
@@ -161,9 +165,7 @@ def make_daily_tracker_line(data: pd.DataFrame) -> None:
         color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
             "Type"))
 
-
     st.altair_chart(archived, use_container_width=True)
-
 
 
 def make_popular_visit_bar(data: pd.DataFrame) -> None:
@@ -173,6 +175,9 @@ def make_popular_visit_bar(data: pd.DataFrame) -> None:
     # Gets the 5 most popular websites
     data = data.groupby(['url_alias', 'type'])['url_alias'].count().reset_index(
         name='Count').sort_values(['Count'], ascending=False).head(5)
+
+    data["url_alias"] = data["url_alias"][:3]
+    print(data["url_alias"])
 
     archives = alt.Chart(data).mark_bar().encode(
         x=alt.X("Count").title(
@@ -186,7 +191,6 @@ def make_popular_visit_bar(data: pd.DataFrame) -> None:
         row=alt.Row('url_alias').sort("descending").title("URL")).properties(height=70, width=800)
 
     st.altair_chart(archives)
-
 
 
 def make_popular_genre_visit_bar(data: pd.DataFrame) -> None:
@@ -213,7 +217,6 @@ def make_popular_genre_visit_bar(data: pd.DataFrame) -> None:
 
 def make_recent_archive_database(data: pd.DataFrame) -> None:
     """Makes database of human input archives."""
-
     st.subheader("Archives")
     # Filter out auto-scraping
     data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
@@ -221,21 +224,27 @@ def make_recent_archive_database(data: pd.DataFrame) -> None:
     st.dataframe(data)
 
 
-def get_popular_screenshot(data):
+def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame):
+    """Gets and displays the most popular sites screenshot."""
     s3_client = get_s3_client()
 
-    test_s3_ref = data[data["url"] ==
-                       "https://www.bbc.co.uk"].tail(1).iloc[0]['screenshot_s3_ref']
-    print(test_s3_ref)
+    if not os.path.exists("./screenshots"):
+        os.makedirs("./screenshots")
 
-    test_s3_ref = "www.youtube.co.uk/YouTube/2024-01-09T09:59:10.205505.png"
+    popular_website = interaction_data.groupby(['url_alias', "url"])['url_alias'].count(
+    ).reset_index(name='Count').sort_values(['Count'], ascending=False).head(1).iloc[0]
+
+    s3_ref = scrape_data[scrape_data["url"] == popular_website["url"]].tail(
+        1).iloc[0]['screenshot_s3_ref']
 
     download_data_file(
-        s3_client, BUCKET, test_s3_ref, "screenshots")
+        s3_client, BUCKET, s3_ref, "screenshots")
 
-    screenshot = Image.open(
-        "./screenshots/www.youtube.co.uk-YouTube-2024-01-09T09:59:10.205505.png")
+    screenshot = Image.open(f"./screenshots/{s3_ref.replace('/', '-')}")
 
     st.subheader("Most Popular Site")
-    st.text("Youtube with 5 visits.")
+    st.text(
+        f"{popular_website['url_alias']} with {popular_website['Count']} visits.")
     st.image(screenshot)
+
+    os.remove(f"./screenshots/{s3_ref.replace('/', '-')}")

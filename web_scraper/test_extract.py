@@ -15,6 +15,7 @@ def test_load_url_data_raise_error_when_empty():
     with pytest.raises(ValueError):
         load_all_data(mock_connection)
 
+
 def test_convert_to_set_removes_duplicates():
     """Tests that when converted to a set, all duplicate values in list ae removed."""
 

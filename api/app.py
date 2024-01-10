@@ -316,7 +316,7 @@ def view_archived_pages():
     for url in urls:
         relevant_keys = get_relevant_png_keys_for_url(
             s3_client, environ['S3_BUCKET'], url)
-        print(relevant_keys)
+
         popular_screenshots += relevant_keys
 
     print(f"POPULAR SCREENSHOTS: {popular_screenshots}")

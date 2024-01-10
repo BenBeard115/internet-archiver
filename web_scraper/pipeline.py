@@ -15,8 +15,11 @@ from load import (add_website, get_soup, extract_title,
 
 IS_HUMAN = False
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
+    hti = Html2Image(custom_flags=["--no-sandbox",
+                                "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
+                                "--use-fake-device-for-media-stream", "--disable-sync"])
     load_dotenv()
 
     startup = perf_counter()
@@ -25,7 +28,6 @@ if __name__ == "__main__":
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
 
-    hti = Html2Image()
 
     connecting_time = perf_counter()
     print("Connecting to S3...")
@@ -42,6 +44,8 @@ if __name__ == "__main__":
         title = extract_title(url)
         domain = extract_domain(url)
         timestamp = datetime.utcnow().isoformat()
+        print(title)
+
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
         img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
@@ -52,6 +56,8 @@ if __name__ == "__main__":
 
         if html_file_name and img_file_name and css_file_name:
             add_website(connection, response_data, url)
+
+    connection.close()
 
     print(f"Data uploaded --- {perf_counter() - download}s.")
     print(f"Pipeline complete --- {perf_counter() - startup}s.")
