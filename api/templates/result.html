@@ -16,7 +16,7 @@
     <ul>
         {% for l in links %}
         <li>
-            <a href="{{ url_for('display_page_instance', display=l.display, filename=l.filename)}}" target="_blank">{{
+            <a href="{{ url_for('display_page_instance', display=l.display, html_file=l.filename)}}" target="_blank">{{
                 l.display }}</a>
 
 

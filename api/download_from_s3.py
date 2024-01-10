@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 BUCKET = 'c9-internet-archiver-bucket'
 USER_FRIENDLY_FORMAT = '%d %B %Y - %I:%M %p'
+IMAGE_FILE_FORMAT = '.png'
 
 load_dotenv()
 
@@ -23,7 +24,10 @@ def get_s3_client() -> client:
 def get_object_keys(s3_client: client, bucket: str) -> list[str]:
     """Returns a list of object keys from a given bucket."""
 
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return None
 
     return [o['Key'] for o in contents]
 
@@ -38,7 +42,6 @@ def filter_keys_by_type(keys: list[str], ends_with: str = None) -> list[str]:
 
 def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
     """Returns a list of relevant object keys for a given website."""
-
     filtered_keys = [key for key in keys if domain in key]
 
     return filtered_keys
@@ -47,7 +50,10 @@ def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
 def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
     """Returns a list of the most recent .png keys uploaded to S3."""
 
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return "Empty Database!"
 
     sorted_contents = sorted(
         contents, key=lambda x: x['LastModified'], reverse=True)
@@ -88,7 +94,11 @@ def download_data_file(s3_client: client, bucket: str, key: str, folder_name: st
     new_filename = key.replace('/', '_')
 
     print(f"\nDownloading: {key}")
-    s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
+    try:
+        s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
+    except:
+        return None
+
     return new_filename
 
 
@@ -104,7 +114,11 @@ def get_all_pages_ordered(s3_client: client, html_filename: str, bucket: str) ->
 
     startswith = f"{html_filename.split('/')[0]}/{html_filename.split('/')[1]}"
 
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return "Empty Database!"
+
     sorted_contents = sorted(
         contents, key=lambda x: x['LastModified'], reverse=True)
 
@@ -130,6 +144,11 @@ def format_timestamps(timestamps: list[str]) -> list[str]:
     return [datetime.strptime(
         ts, "%Y-%m-%dT%H:%M:%S.%f").strftime(USER_FRIENDLY_FORMAT) for ts in timestamps]
 
+def get_relevant_html_keys_for_url(s3_client: client, bucket: str, url:str) -> list[str]:
+    """Returns a list of object keys from a given bucket, given a constraint."""
+    url_without_https = url[8:]
+    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.html')]
 
 if __name__ == "__main__":
 
@@ -145,5 +164,17 @@ if __name__ == "__main__":
 
     # download_data_files(s3_client, BUCKET, ikea_html, 'data')
 
-    get_object_from_s3(
-        s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")
+    # get_object_from_s3(
+    #     s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")
+
+    
+    urls = ['https://www.youtube.co.uk', 'https://www.bbc.co.uk/news/uk-politics-62064552', 'https://www.itv.co.uk', 'https://www.bbc.co.uk',
+        'https://www.theguardian.com/film/2023/dec/31/raging-grace-review-gothic-infused-filipina-immigrant-thriller-paris-zarcilla']
+    
+  
+
+    for url in urls:
+        print(url[8:])
+        print(get_relevant_html_keys_for_url(s3_client, environ['S3_BUCKET'], url))
+    
+
