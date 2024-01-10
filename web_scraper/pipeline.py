@@ -44,6 +44,8 @@ if __name__ == "__main__":
         title = extract_title(url)
         domain = extract_domain(url)
         timestamp = datetime.utcnow().isoformat()
+        print(title)
+
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
         img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
