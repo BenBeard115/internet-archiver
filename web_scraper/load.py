@@ -1,7 +1,7 @@
 """Script used to insert the re-scraped HTML and CSS files into the S3 bucket."""
 
 from datetime import datetime
-from os import environ, getcwd, remove
+from os import environ, remove
 from time import perf_counter
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
