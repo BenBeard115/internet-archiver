@@ -1,6 +1,6 @@
 """Script used to insert the re-scraped HTML and CSS files into the S3 bucket."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from os import environ, getcwd, remove
 from time import perf_counter
 from urllib.request import urlopen, Request
@@ -213,7 +213,7 @@ if __name__ == "__main__":
         soup = get_soup(url)
         title = extract_title(url)
         domain = extract_domain(url)
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.utcnow().isoformat()
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
         img_file_name = process_screenshot(url, domain, title, timestamp, client)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
