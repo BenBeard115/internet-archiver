@@ -1,5 +1,7 @@
 FROM python:latest
 
+RUN apt-get update -y && apt-get install -y chromium dbus
+
 WORKDIR dashboard
 
 COPY archive_image.png .
