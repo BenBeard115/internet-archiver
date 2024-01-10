@@ -423,5 +423,11 @@ def download_file(filename):
     return send_from_directory('static', filename)
 
 
+@app.route('/limitations')
+def limitations():
+    """Renders the web page that states the limitations of our application at its current stage."""
+
+    return render_template('limitations.html')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Internet Archiver</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+</head>
+
+<body>
+    <!-- HEADER COMPONENT -->
+
+        <header class="container text-center">
+        <h1 class="display-1">The Internet Archiver: Limitations </h1>
+            <p>
+            Due to the nature of our archiving process alongside the complexities of modern web pages, not all content 
+            on an archived web page will work or display correctly.
+            </p>
+            <p>
+            Web page archives are simply a snapshot of what was online and accessible at the time it was taken, it is <strong>not</strong>
+            a 'backup' or copy of a webpage, from which the original web page can be fully restored at a later date.
+            </p>
+            <p>
+            Listed below are the main things that can't be fully preserved by our application:
+            </p>
+            <hr>
+
+            <ul>
+                <li>
+                    <strong>Links within archived webpages to other pages or sites.</strong>
+                    <p>For example, if you are viewing a BBC news article and there is a link to another article within that.</p>
+                </li>
+                <li>
+                    <strong>Links inside documents</strong>
+
+                    <p>(.pdf, .doc, .docx, .xls, .xlsx, .csv documents) do not currently work in the web archive.</p>
+                </li>
+                <li>
+                    <strong>Interactive Content</strong>
+                    <p>Any content that requires user input to proceed, e.g. tick boxes, login fields, search boxes, any forms.</p>
+                </li>
+                <li>
+                    <strong>Limited Access Content</strong>
+                    <p>Any content that requires a login to be accessed.</p>
+                </li>                    
+                <li>
+                    <strong>Some Navigational Features</strong>
+                    <p>Things such as drop down menus, navigation search bars and so on.</p>
+                </li> 
+                <li>
+                    <strong>Image Galleries</strong>
+                    <p>Large images, or collections of images can sometimes be difficult to capture correctly.</p>
+                </li>           
+                <li>
+                    <strong>Embedded Content</strong>
+                    <p>E.g. google maps, media content such as videos, social media content.</p>
+                </li>     
+                <li>
+                    <strong>Flash Animations, Games or Streaming Media</strong>
+                </li>   
+            </ul>
+
+        <hr>
+        <button class="btn btn-warning" onclick='window.location.href = "/"'>
+            Return Home
+        </button>
+
+        <button class="btn btn-warning" onclick='window.location.href = "/submit"'>
+            Submit Page
+        </button>
+
+        <button class="btn btn-warning" onclick='window.location.href = "/archived-pages"'>
+            Search Archived Pages
+        </button>
+        </div>
+
+</body>
+
+</html>
