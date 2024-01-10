@@ -24,7 +24,10 @@ def get_s3_client() -> client:
 def get_object_keys(s3_client: client, bucket: str) -> list[str]:
     """Returns a list of object keys from a given bucket."""
 
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return None
 
     return [o['Key'] for o in contents]
 

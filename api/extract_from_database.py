@@ -51,10 +51,13 @@ def get_url(s3_ref: str, conn: extensions.connection) -> str:
     with conn.cursor() as cur:
         cur.execute(query)
         try:
-            if cur.fetchall():
+            if len(cur.fetchall()) == 1:
+                url_extract = cur.fetchall()
+                return url_extract
+            elif len(cur.fetchall()) > 1:
                 url_extract = cur.fetchall()[0][0]
                 return url_extract
-            
+
         except KeyError as exc:
             raise KeyError("There were no values with that reference!") from exc
     
