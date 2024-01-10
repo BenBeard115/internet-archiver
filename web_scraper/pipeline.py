@@ -14,10 +14,12 @@ from load import (add_website, get_soup, extract_title,
                   process_screenshot, process_css_content)
 
 IS_HUMAN = False
-HTI = Html2Image()
+
 
 if __name__ == "__main__":
-
+    hti = Html2Image(custom_flags=["--no-sandbox",
+                                "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
+                                "--use-fake-device-for-media-stream", "--disable-sync"])
     load_dotenv()
 
     startup = perf_counter()
@@ -43,7 +45,7 @@ if __name__ == "__main__":
         domain = extract_domain(url)
         timestamp = datetime.utcnow().isoformat()
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
-        img_file_name = process_screenshot(url, domain, title, timestamp, client)
+        img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
 
         response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name,

@@ -23,10 +23,6 @@ HTML_FILE_FORMAT = ".html"
 CSS_FILE_FORMAT = ".css"
 IS_HUMAN = False
 
-HTI = Html2Image(custom_flags=["--no-sandbox",
-                               "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
-                               "--use-fake-device-for-media-stream", "--disable-sync"])
-
 
 def get_soup(current_url: str) -> BeautifulSoup:
     """Gets Soup object from url."""
@@ -114,7 +110,8 @@ def process_screenshot(current_url: str,
                        current_domain: str,
                        current_title: str,
                        current_timestamp: str,
-                       s3_client: client) -> str:
+                       s3_client: client,
+                       hti: Html2Image) -> str:
     """Takes screenshot of webpage and uploads to S3."""
 
     img_filename_string = f"{current_domain}_{current_title}_{current_timestamp}"
@@ -123,7 +120,7 @@ def process_screenshot(current_url: str,
     filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     img_object_key_s3 = f"{filename_string}{IMAGE_FILE_FORMAT}"
 
-    HTI.screenshot(url=current_url,
+    hti.screenshot(url=current_url,
                    size=DISPLAY_SIZE,
                    save_as=img_object_key)
 
@@ -138,7 +135,6 @@ def upload_file_to_s3(s3_client: client, filename: str, bucket: str, key: str) -
     """Uploads a file to the specified S3 bucket."""
 
     try:
-        print(getcwd())
         s3_client.upload_file(filename, bucket, key)
 
     except ClientError:
@@ -196,6 +192,10 @@ if __name__ == "__main__":
     load_dotenv()
     connection = get_database_connection()
 
+    hti = Html2Image(custom_flags=["--no-sandbox",
+                               "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
+                               "--use-fake-device-for-media-stream", "--disable-sync"])
+
     startup = perf_counter()
     print("Connecting to S3...")
     client = client('s3',
@@ -215,7 +215,7 @@ if __name__ == "__main__":
         domain = extract_domain(url)
         timestamp = datetime.utcnow().isoformat()
         html_file_name = process_html_content(soup, domain, title, timestamp, client)
-        img_file_name = process_screenshot(url, domain, title, timestamp, client)
+        img_file_name = process_screenshot(url, domain, title, timestamp, client, hti)
         css_file_name = process_css_content(soup, domain, title, timestamp, client)
 
         response_data = {"scrape_at": timestamp, "html_s3_ref": html_file_name,
