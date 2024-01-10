@@ -57,8 +57,9 @@ def get_url(s3_ref: str, conn: extensions.connection) -> str:
                 return url_extract
 
         except KeyError as exc:
-            raise KeyError("There were no values with that reference!") from exc
-    
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
     return "Empty Database!"
 
 
@@ -84,6 +85,98 @@ def get_most_popular_urls(conn: extensions.connection) -> list[str]:
                 "There were no values with that reference!") from exc
 
     return urls
+
+
+def get_summary_from_db(s3_ref: str, conn: extensions.connection) -> str:
+    """Gets the AI summary from the database, given an s3_ref."""
+
+    query = f"""SELECT summary FROM url
+                 JOIN page_scrape ON url.url_id = page_scrape.url_id
+                 WHERE html_s3_ref LIKE '%{s3_ref}%'"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            url_extract = cur.fetchall()[0][0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return url_extract
+
+
+def get_genre_from_db(url: str, conn: extensions.connection) -> str:
+    """Gets the AI-generated genre from the database, given an url."""
+
+    query = f"""SELECT genre FROM url
+                 JOIN page_scrape ON url.url_id = page_scrape.url_id
+                 WHERE url LIKE '%{url}%'"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            url_extract = cur.fetchall()[0][0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return url_extract
+
+
+def get_first_submission_time(url: str, conn: extensions.connection) -> str:
+    """Gets the timestamp of the first submission to the database, given a url."""
+
+    query = f"""SELECT scrape_at FROM page_scrape
+                 JOIN url ON url.url_id = page_scrape.url_id
+                 WHERE url LIKE '%{url}%'
+                 ORDER BY scrape_at ASC
+                 LIMIT 1;"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            url_extract = cur.fetchall()[0][0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return url_extract
+
+
+def get_number_of_views(url: str, conn: extensions.connection) -> int:
+    """Get number of views for a given url."""
+
+    query = f"""SELECT COUNT(type_id) FROM user_interaction
+                JOIN url ON url.url_id = user_interaction.url_id
+                WHERE url LIKE '%{url}%' and type_id = 1;"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            url_extract = cur.fetchall()[0][0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return url_extract
+
+
+def get_number_of_saves(url: str, conn: extensions.connection) -> int:
+    """Get number of saves for a given url."""
+
+    query = f"""SELECT COUNT(type_id) FROM user_interaction
+                JOIN url ON url.url_id = user_interaction.url_id
+                WHERE url LIKE '%{url}%' and type_id = 2;"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            url_extract = cur.fetchall()[0][0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return url_extract
 
 
 if __name__ == "__main__":

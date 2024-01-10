@@ -34,7 +34,12 @@ from upload_to_database import (
 from extract_from_database import (
     get_connection,
     get_url,
-    get_most_popular_urls
+    get_most_popular_urls,
+    get_summary_from_db,
+    get_genre_from_db,
+    get_first_submission_time,
+    get_number_of_views,
+    get_number_of_saves
 )
 
 from download_from_s3 import (
@@ -55,7 +60,8 @@ from download_from_s3 import (
 )
 
 from chat_gpt_utils import (
-    generate_summary
+    generate_summary,
+    get_genre
 )
 
 DISPLAY_SIZE = (800, 600)
@@ -239,6 +245,8 @@ def submit():
 def save():
     """Allows user to input URL and save HTML and CSS."""
 
+    connection = get_connection(environ)
+
     url = request.form['url']
     timestamp = datetime.utcnow().isoformat()
 
@@ -258,7 +266,8 @@ def save():
             url, domain, title, timestamp, s3_client)
 
         gpt_summary = generate_summary(str(soup))
-        print(gpt_summary)
+        webpage_genre = get_genre(str(soup))
+        print(f"WEBPAGE GENRE (AT SUBMIT): {webpage_genre}")
 
         response_data = {
             'url': url,
@@ -268,7 +277,7 @@ def save():
             'scrape_at': timestamp,
             'summary': gpt_summary,
             'is_human': True,
-            'genre': ''
+            'genre': webpage_genre
         }
 
         upload_scrape_to_database(response_data)
@@ -285,14 +294,21 @@ def save():
 
         print(f"Upload successful: {interaction_data}")
 
-        # return redirect(f'/?status=success&summary={gpt_summary}&url={url}&timestamp={timestamp}')
+        first_submitted = get_first_submission_time(url, connection)
+        number_of_views = get_number_of_views(url, connection)
+        number_of_saves = get_number_of_saves(url, connection)
 
         return render_template('page_history.html',
                                img_filename=img_object_key_s3,
                                html_filename=html_object_key,
                                url=url,
                                timestamp=timestamp,
-                               gpt_summary=gpt_summary)
+                               gpt_summary=gpt_summary,
+                               genre=webpage_genre,
+                               first_submitted=first_submitted,
+                               number_of_views=number_of_views,
+                               number_of_saves=number_of_saves
+                               )
 
     except Exception as e:
         print(f"Error: {str(e)}")
@@ -362,6 +378,7 @@ def display_page_history():
     """Page which displays all previous captures of a page."""
 
     s3_client = get_s3_client(environ)
+    connection = get_connection(environ)
 
     local_img_filename = request.args.get('local_img_filename')
     screenshot_label = request.args.get('screenshot_label')
@@ -374,6 +391,12 @@ def display_page_history():
     print(timestamp)
     print(html_key)
     print(url)
+
+    gpt_summary = get_summary_from_db(html_key, connection)
+    webpage_genre = get_genre_from_db(url, connection)
+    first_submitted = get_first_submission_time(url, connection)
+    number_of_views = get_number_of_views(url, connection)
+    number_of_saves = get_number_of_saves(url, connection)
 
     html_files = get_all_pages_ordered(
         s3_client, html_key, environ['S3_BUCKET'])
@@ -398,10 +421,17 @@ def display_page_history():
 
     upload_interaction_to_database(interaction_data)
 
+    print(f"WEBPAGE GENRE (WHEN VIEWING): {webpage_genre}")
+
     return render_template('page_history.html',
                            pages=pages,
                            url=url,
-                           screenshot_label=screenshot_label)
+                           screenshot_label=screenshot_label,
+                           gpt_summary=gpt_summary,
+                           genre=webpage_genre,
+                           first_submitted=first_submitted,
+                           number_of_views=number_of_views,
+                           number_of_saves=number_of_saves)
 
 
 @app.get("/display-page")

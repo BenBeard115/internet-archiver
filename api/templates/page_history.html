@@ -11,15 +11,21 @@
 </head>
 
 
-
-
-
-
 <body>
 
     <h1 class="webpage-history">Webpage Capture History</h1>
 
-    <h2 class="webpage-history">{{ url }}</h2>
+    <h2 class="webpage-history">URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
+
+    <h2 class="webpage-history">FIRST SUBMITTED: {{ first_submitted }}</h2>
+
+    <h2 class="webpage-history">NUMBER OF VIEWS: {{ number_of_views }}</h2>
+
+    <h2 class="webpage-history">NUMBER OF SAVES: {{ number_of_saves }}</h2>
+
+    <h2 class="webpage-history">SUMMARY: {{ gpt_summary }}</h2>
+
+    <h2 class="webpage-history">GENRE: {{ genre }}</h2>
 
     <hr>
 
