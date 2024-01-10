@@ -51,11 +51,14 @@ def get_url(s3_ref: str, conn: extensions.connection) -> str:
     with conn.cursor() as cur:
         cur.execute(query)
         try:
-            url_extract = cur.fetchall()[0][0]
+            if cur.fetchall():
+                url_extract = cur.fetchall()[0][0]
+                return url_extract
+            
         except KeyError as exc:
             raise KeyError("There were no values with that reference!") from exc
     
-    return url_extract
+    return "Empty Database!"
 
 
 def get_most_popular_urls(conn: extensions.connection) -> list[str]:

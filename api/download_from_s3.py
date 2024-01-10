@@ -47,7 +47,10 @@ def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
 def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
     """Returns a list of the most recent .png keys uploaded to S3."""
 
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return "Empty Database!"
 
     sorted_contents = sorted(
         contents, key=lambda x: x['LastModified'], reverse=True)
@@ -88,7 +91,11 @@ def download_data_file(s3_client: client, bucket: str, key: str, folder_name: st
     new_filename = key.replace('/', '_')
 
     print(f"\nDownloading: {key}")
-    s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
+    try:
+        s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
+    except:
+        return None
+
     return new_filename
 
 
@@ -104,7 +111,11 @@ def get_all_pages_ordered(s3_client: client, html_filename: str, bucket: str) ->
 
     startswith = f"{html_filename.split('/')[0]}/{html_filename.split('/')[1]}"
 
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return "Empty Database!"
+
     sorted_contents = sorted(
         contents, key=lambda x: x['LastModified'], reverse=True)
 
@@ -161,6 +172,6 @@ if __name__ == "__main__":
 
     for url in urls:
         print(url[8:])
-        print(get_relevant_object_keys_for_url(s3_client, environ['S3_BUCKET'], url))
+        print(get_relevant_html_keys_for_url(s3_client, environ['S3_BUCKET'], url))
     
 

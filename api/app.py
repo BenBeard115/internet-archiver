@@ -211,6 +211,8 @@ def submit():
     for scrape in recent_screenshots:
         local_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], scrape, 'static')
+        if local_filename is None:
+             return render_template('submit.html')
 
         local_screenshot_files.append(local_filename)
         screenshot_labels.append(scrape.split(
