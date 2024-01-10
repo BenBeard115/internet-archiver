@@ -66,8 +66,10 @@ def get_most_popular_urls(conn: extensions.connection) -> list[str]:
     """Gets the url from the database, given an s3_ref."""
 
     urls = []
-    query = """SELECT COUNT(*), url FROM url 
+    query = """SELECT COUNT(*), url FROM url
                 JOIN user_interaction ON url.url_id = user_interaction.url_id 
+                JOIN page_scrape ON url.url_id = page_scrape.url_id
+                WHERE is_human is True
                 GROUP BY url ORDER BY COUNT(*) 
                 DESC LIMIT 10;"""
 
