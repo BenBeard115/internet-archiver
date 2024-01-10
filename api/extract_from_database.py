@@ -58,9 +58,32 @@ def get_url(s3_ref: str, conn: extensions.connection) -> str:
     return url_extract
 
 
+def get_most_popular_urls(conn: extensions.connection) -> list[str]:
+    """Gets the url from the database, given an s3_ref."""
+
+    urls = []
+    query = """SELECT COUNT(*), url FROM url 
+                JOIN user_interaction ON url.url_id = user_interaction.url_id 
+                GROUP BY url ORDER BY COUNT(*) 
+                DESC LIMIT 10;"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            url_tuples = cur.fetchall()
+            for url in url_tuples:
+                urls.append(url[1])
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return urls
+
+
 if __name__ == "__main__":
     load_dotenv()
     logging.getLogger().setLevel(logging.INFO)
 
     connection = get_connection(environ)
-    print(extract_data(connection, "https://www.telegraph.co.uk/"))
+    # print(extract_data(connection, "https://www.telegraph.co.uk/"))
+    print(get_most_popular_urls(connection))
