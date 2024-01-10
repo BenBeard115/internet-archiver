@@ -42,7 +42,7 @@ In order to run the terraform code, once you have the `.env` file setup, then th
 3. `pip3 install -r requirements.txt` : Downloads all of the modules needed to run the code.
 4. `python3 pipeline.py` : Runs the entire pipeline and re-scrapes all of your links currently in the database, unless blocked.
 
-And then finally, if you want to run it automatically every 3 hours from 9am until 6pm:
+And then finally, if you want to run it automatically every 3 hours every day:
 
 1. Create an ECR repository.
 2. Terraform the files (instructions found in terraform folder).
