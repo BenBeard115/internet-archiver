@@ -54,3 +54,7 @@ variable "AWS_REGION" {
 variable "AWS_STREAM_PREFIX" {
     type = string
 }
+
+variable "OPENAI_API_KEY" {
+    type = string
+}
