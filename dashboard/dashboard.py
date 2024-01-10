@@ -89,4 +89,9 @@ if __name__ == "__main__":
             make_recent_archive_database(scrape_df)
 
     with col2:
-        get_popular_screenshot(scrape_df)
+        if selected_website_interaction_df.shape[0] > 0 and selected_website_scrape_df.shape[0] > 0:
+            get_popular_screenshot(
+                selected_website_scrape_df, selected_website_interaction_df)
+
+        else:
+            get_popular_screenshot(scrape_df, interaction_df)
