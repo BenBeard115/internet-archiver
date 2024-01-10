@@ -33,7 +33,8 @@ def make_url_alias(url: str) -> str:
     return match.group(3)
 
 
-def make_shorter_alias(url_alias: str):
+def make_shorter_alias(url_alias: str) -> str:
+    """Returns a shorter url alias for graphs."""
     return url_alias[:4]
 
 
