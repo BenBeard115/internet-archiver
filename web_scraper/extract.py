@@ -53,4 +53,6 @@ if __name__ == "__main__":
     list_of_urls = load_all_data(connection)
     print(f"Data loaded --- {perf_counter() - startup}s.")
 
+    connection.close()
+
     print(f"Extract phase complete --- {perf_counter() - startup}s.")

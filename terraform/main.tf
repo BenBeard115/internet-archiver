@@ -150,7 +150,7 @@ resource "aws_iam_policy_attachment" "schedule-policy-attachment" {
 # create EventBridge schedule for web scraper script
 resource "aws_scheduler_schedule" "c9-internet-archiver-scraper-schedule" {
     name       = "c9-internet-archiver-scraper-schedule"
-    schedule_expression = "cron(0 9-18/3 * * ? *)"
+    schedule_expression = "cron(0 */3 * * ? *)"
     flexible_time_window {
         mode = "OFF"
     }

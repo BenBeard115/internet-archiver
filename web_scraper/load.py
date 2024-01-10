@@ -23,6 +23,7 @@ HTML_FILE_FORMAT = ".html"
 CSS_FILE_FORMAT = ".css"
 IS_HUMAN = False
 
+
 def get_soup(current_url: str) -> BeautifulSoup:
     """Gets Soup object from url."""
 
@@ -97,7 +98,6 @@ def process_css_content(current_soup: BeautifulSoup,
     filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     css_object_key = f"{filename_string}{CSS_FILE_FORMAT}"
 
-
     css_content = current_soup.prettify()
 
     s3_client.put_object(
@@ -111,7 +111,7 @@ def process_screenshot(current_url: str,
                        current_title: str,
                        current_timestamp: str,
                        s3_client: client,
-                       hti_object: Html2Image) -> str:
+                       hti: Html2Image) -> str:
     """Takes screenshot of webpage and uploads to S3."""
 
     img_filename_string = f"{current_domain}_{current_title}_{current_timestamp}"
@@ -120,7 +120,7 @@ def process_screenshot(current_url: str,
     filename_string = f"{current_domain}/{current_title}/{current_timestamp}"
     img_object_key_s3 = f"{filename_string}{IMAGE_FILE_FORMAT}"
 
-    hti_object.screenshot(url=current_url,
+    hti.screenshot(url=current_url,
                    size=DISPLAY_SIZE,
                    save_as=img_object_key)
 
@@ -190,8 +190,11 @@ def add_website(conn: extensions.connection, current_response_data: dict, curren
 if __name__ == "__main__":
 
     load_dotenv()
-    hti = Html2Image()
     connection = get_database_connection()
+
+    hti = Html2Image(custom_flags=["--no-sandbox",
+                               "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
+                               "--use-fake-device-for-media-stream", "--disable-sync"])
 
     startup = perf_counter()
     print("Connecting to S3...")
@@ -221,5 +224,7 @@ if __name__ == "__main__":
 
         if html_file_name and img_file_name and css_file_name:
             add_website(connection, response_data, url)
+
+    connection.close()
 
     print(f"Data uploaded --- {perf_counter() - download}s.")
