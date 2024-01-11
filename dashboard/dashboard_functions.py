@@ -236,7 +236,7 @@ def make_popular_genre_visit_bar(data: pd.DataFrame) -> None:
         color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
             "Type"),
 
-        row=alt.Row('genre').sort("descending").title("Genre")).properties(height=70, width=800)
+        row=alt.Row('genre').title("Genre")).properties(height=70, width=800)
 
     st.altair_chart(genre)
 
@@ -245,7 +245,7 @@ def make_recent_archive_database(data: pd.DataFrame) -> None:
     """Makes database of human input archives."""
     st.subheader("Archives")
     # Filter out auto-scraping
-    data = data[data["is_human"] == True][["url_alias", "scrape_at"]]
+    data = data[data["is_human"] == True][["url_alias", "genre", "scrape_at"]]
 
     st.dataframe(data)
 
