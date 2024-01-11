@@ -209,15 +209,13 @@ def retrieve_searched_for_pages(s3_client: client, input: str):
 
 def get_most_recently_saved_web_pages() -> dict:
     """Get the most recently saved web pages to display on the website."""
-    pages = []
     s3_client = client('s3',
                        aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
                        aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
     keys = get_recent_png_s3_keys(s3_client, environ['S3_BUCKET'])
     titles = format_object_key_titles(keys)
-    for title in titles:
-        pages.append(title)
-    return pages
+    
+    return [title for title in titles]
 
 
 if __name__ == "__main__":
