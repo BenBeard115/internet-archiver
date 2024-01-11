@@ -104,8 +104,12 @@ def get_recent_html_s3_keys(s3_client: client, bucket: str, num_files: int = 10)
 def format_object_key_titles(keys: list[str]) -> list[str]:
     """Formats the keys as standardised titles to be listed on the website."""
 
-    formatted_keys = [
-        key.split('-')[0].replace("  ", " ").replace('/', ' - ') for key in keys]
+    formatted_keys = []
+
+    for key in keys:
+        formatted_key = key.split(
+            '/')[0] + '/' + key.split('/')[1]
+        formatted_keys.append(formatted_key)
     return set(formatted_keys)
 
 
@@ -174,16 +178,46 @@ def get_relevant_html_keys_for_url(s3_client: client, bucket: str, url: str) -> 
     return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.html')]
 
 
-def get_relevant_png_keys_for_url(s3_client: client, bucket: str, url: str) -> list[str]:
+def get_relevant_png_keys_for_url_from_s3(s3_client: client, bucket: str, url: str) -> list[str]:
     """Returns a list of object keys from a given bucket, given a constraint."""
     if 'https' in url:
         url_without_https = url[8:]
     else:
         url_without_https = url
-
+    print(url)
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
 
     return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.png')]
+
+
+def retrieve_searched_for_pages(s3_client: client, input: str):
+    """Get the relevant pages that have been searched for."""
+
+    pages = []
+    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
+    if keys is None:
+        return 'Empty Database!'
+
+    png_keys = filter_keys_by_type(keys, '.png')
+    relevant_keys = filter_keys_by_website(png_keys, input)
+    for relevant_key in relevant_keys:
+        display_key = relevant_key.split(
+            '/')[0] + '/' + relevant_key.split('/')[1]
+        pages.append(display_key)
+    return pages
+
+
+def get_most_recently_saved_web_pages() -> dict:
+    """Get the most recently saved web pages to display on the website."""
+    pages = []
+    s3_client = client('s3',
+                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
+                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
+    keys = get_recent_png_s3_keys(s3_client, environ['S3_BUCKET'])
+    titles = format_object_key_titles(keys)
+    for title in titles:
+        pages.append(title)
+    return pages
 
 
 if __name__ == "__main__":
@@ -207,3 +241,5 @@ if __name__ == "__main__":
 
     for url in urls:
         print(get_most_recent_png_key(s3_client, environ['S3_BUCKET'], url))
+
+    print(get_most_recently_saved_web_pages())

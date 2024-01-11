@@ -40,7 +40,8 @@ from extract_from_database import (
     get_first_submission_time,
     get_number_of_views,
     get_number_of_saves,
-    get_png_key_s3
+    get_recent_png_key_s3,
+    get_png_keys_s3
 )
 
 from download_from_s3 import (
@@ -56,9 +57,9 @@ from download_from_s3 import (
     get_all_screenshots,
     get_scrape_times,
     format_timestamps,
-    get_relevant_html_keys_for_url,
-    get_relevant_png_keys_for_url,
-    get_most_recent_png_key
+    get_most_recent_png_key,
+    get_most_recently_saved_web_pages,
+    retrieve_searched_for_pages
 )
 
 from chat_gpt_utils import (
@@ -134,36 +135,6 @@ def process_screenshot(url: str,
     return img_object_key_s3
 
 
-def get_most_recently_saved_web_pages() -> dict:
-    """Get the most recently saved web pages to display on the website."""
-    pages = []
-    s3_client = client('s3',
-                       aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
-                       aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
-    keys = get_recent_png_s3_keys(s3_client, environ['S3_BUCKET'])
-    titles = format_object_key_titles(keys)
-    for title in titles:
-        pages.append({'display': title, 'url': None})
-    print(pages)
-    return pages
-
-
-def retrieve_searched_for_pages(s3_client: client, input: str):
-    """Get the relevant pages that have been searched for."""
-
-    pages = []
-    keys = get_object_keys(s3_client, environ['S3_BUCKET'])
-    if keys is None:
-        return 'Empty Database!'
-
-    png_keys = filter_keys_by_type(keys, '.png')
-    relevant_keys = filter_keys_by_website(png_keys, input)
-    for relevant_key in relevant_keys:
-        display_key = relevant_key.split('/')[0] + '/' + relevant_key.split('/')[1]
-        pages.append(display_key)
-    return pages
-
-
 def upload_scrape_to_database(response_data: dict) -> None:
     """Uploads website information to the database."""
     connection = get_connection(environ)
@@ -195,49 +166,30 @@ def index():
 
 @app.route('/submit')
 def submit():
-    """Main page of website."""
-
-    # do we still need these?
-    status = request.args.get('status')
-    gpt_summary = request.args.get('summary')
-    url = request.args.get('url')
-    timestamp = request.args.get('timestamp')
-    #
+    """End point to submit a story."""
 
     s3_client = get_s3_client(environ)
     connection = get_connection(environ)
 
-    recent_screenshots = get_recent_png_s3_keys(
-        s3_client, environ['S3_BUCKET'], NUM_OF_SITES_HOMEPAGE)
+    s3_refs = get_most_recently_saved_web_pages()
+    pages = []
+    s3_refs_set = set(s3_refs)
 
-    recent_html_files = [screenshot.replace(
-        '.png', '.html') for screenshot in recent_screenshots]
+    for s3_ref in s3_refs_set:
+        png_key = get_most_recent_png_key(s3_client, environ['S3_BUCKET'], s3_ref)
+        url = get_url(s3_ref, connection)
 
-    urls = [get_url(html, connection) for html in recent_html_files]
+        if png_key == 'No Relevant Keys':
+            return render_template('archived_pages.html')
 
-    local_screenshot_files = []
-    screenshot_labels = []
-    timestamps = []
-    for scrape in recent_screenshots:
-        local_filename = download_data_file(
-            s3_client, environ['S3_BUCKET'], scrape, 'static')
-        if local_filename is None:
-            return render_template('submit.html')
+        image_filename = download_data_file(
+            s3_client, environ['S3_BUCKET'], png_key, 'static')
+        screenshot_label = png_key.split(
+            '/')[0] + '/' + png_key.split('/')[1]
 
-        local_screenshot_files.append(local_filename)
-        screenshot_labels.append(scrape.split(
-            '/')[0] + '/' + scrape.split('/')[1])
+        pages.append({'url': url, 'image_filename': image_filename, "label": screenshot_label})
 
-        timestamp = scrape.split('/')[-1].replace('.png', '')
-        timestamps.append(timestamp)
-
-    page_info = zip(local_screenshot_files,
-                    screenshot_labels,
-                    timestamps,
-                    recent_html_files,
-                    urls)
-
-    return render_template('submit.html', page_info=page_info)
+    return render_template("submit.html", pages=pages, input=input)
 
 
 @app.route('/save', methods=['POST'])
@@ -328,7 +280,7 @@ def view_archived_pages():
     urls = get_most_popular_urls(connection)
     pages = []
     for url in urls:
-        png_key = get_png_key_s3(connection, url)
+        png_key = get_recent_png_key_s3(connection, url)
         image_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], png_key, 'static')
         screenshot_label = png_key.split(
@@ -380,19 +332,14 @@ def display_page_history():
 
     url = request.args.get('url')
 
-    screenshots = []
-    relevant_keys = get_relevant_png_keys_for_url(
-            s3_client, environ['S3_BUCKET'], url)
-
-    screenshots += relevant_keys
-
+    png_files = get_png_keys_s3(connection, url)
     html_files = [png_file.replace(
-        '.png', '.html', ) for png_file in screenshots]
+        '.png', '.html', ) for png_file in png_files]
 
     local_screenshot_files = []
     screenshot_labels = []
     timestamps = []
-    for scrape in screenshots:
+    for scrape in png_files:
         local_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], scrape, 'static')
 
@@ -403,7 +350,11 @@ def display_page_history():
         timestamp = scrape.split('/')[-1].replace('.png', '')
         timestamps.append(timestamp)
 
-    # gpt_summary = get_summary_from_db(html_key, connection)
+    html_key = html_files[0]
+    screenshot_label = html_key.split(
+            '/')[0] + '/' + scrape.split('/')[1]
+
+    gpt_summary = get_summary_from_db(html_key, connection)
     webpage_genre = get_genre_from_db(url, connection)
     first_submitted = get_first_submission_time(url, connection)
     number_of_views = get_number_of_views(url, connection)
@@ -436,8 +387,8 @@ def display_page_history():
     return render_template('page_history.html',
                            pages=pages,
                            url=url,
-                        #    screenshot_label=screenshot_label,
-                        #    gpt_summary=gpt_summary,
+                           screenshot_label=screenshot_label,
+                           gpt_summary=gpt_summary,
                            genre=webpage_genre,
                            first_submitted=first_submitted,
                            number_of_views=number_of_views,
