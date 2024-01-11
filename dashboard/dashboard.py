@@ -8,6 +8,7 @@ import streamlit as st
 from PIL import Image
 import pandas as pd
 from psycopg2 import extensions
+from streamlit_autorefresh import st_autorefresh
 
 from extract import get_connection, get_all_scrape_data, get_all_interaction_data
 from dashboard_functions import (
@@ -23,8 +24,6 @@ from dashboard_functions import (
     get_popular_screenshot,
     make_searchbar_toggle_radio)
 
-
-# TODO Add auto-refreshing
 
 def make_url_alias(url: str) -> str:
     """Makes an alias for the url."""
@@ -71,8 +70,11 @@ def setup_page():
 if __name__ == "__main__":
     load_dotenv()
     connection = get_connection(environ)
-    scrape_df, interaction_df = setup_database(connection)
     setup_page()
+
+    st_autorefresh(interval=20000)
+
+    scrape_df, interaction_df = setup_database(connection)
 
     st.sidebar.write(
         "[SnapSite: The Website Archiver](http://13.42.9.188:5000/)")

@@ -11,8 +11,6 @@ from download_screenshot import download_data_file, get_s3_client
 
 BUCKET = 'c9-internet-archiver-bucket'
 
-# TODO search by genre
-
 
 def make_searchbar_toggle_radio() -> None:
     """Makes a searchbar radio."""
@@ -271,6 +269,7 @@ def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataF
     screenshot = Image.open(f"./screenshots/{s3_ref.replace('/', '-')}")
 
     st.subheader("Most Popular Site")
+    # Make url fit in container
     if len(popular_website["url"]) > 35:
         website = popular_website['url'][:35] + '...'
     else:
