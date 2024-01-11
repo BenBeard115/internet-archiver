@@ -6,3 +6,4 @@ pandas
 pillow
 html2image
 boto3
+streamlit_autorefresh
