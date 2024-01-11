@@ -193,18 +193,15 @@ def get_relevant_png_keys_for_url_from_s3(s3_client: client, bucket: str, url: s
 def retrieve_searched_for_pages(s3_client: client, input: str):
     """Get the relevant pages that have been searched for."""
 
-    pages = []
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     if keys is None:
         return 'Empty Database!'
 
     png_keys = filter_keys_by_type(keys, '.png')
     relevant_keys = filter_keys_by_website(png_keys, input)
-    for relevant_key in relevant_keys:
-        display_key = relevant_key.split(
-            '/')[0] + '/' + relevant_key.split('/')[1]
-        pages.append(display_key)
-    return pages
+    
+    return [relevant_key.split(
+            '/')[0] + '/' + relevant_key.split('/')[1] for relevant_key in relevant_keys]
 
 
 def get_most_recently_saved_web_pages() -> dict:
