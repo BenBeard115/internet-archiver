@@ -39,7 +39,8 @@ from extract_from_database import (
     get_genre_from_db,
     get_first_submission_time,
     get_number_of_views,
-    get_number_of_saves
+    get_number_of_saves,
+    get_png_key_s3
 )
 
 from download_from_s3 import (
@@ -56,7 +57,8 @@ from download_from_s3 import (
     get_scrape_times,
     format_timestamps,
     get_relevant_html_keys_for_url,
-    get_relevant_png_keys_for_url
+    get_relevant_png_keys_for_url,
+    get_most_recent_png_key
 )
 
 from chat_gpt_utils import (
@@ -324,39 +326,18 @@ def view_archived_pages():
     connection = get_connection(environ)
 
     urls = get_most_popular_urls(connection)
-    popular_screenshots = []
+    pages = []
     for url in urls:
-        relevant_keys = get_relevant_png_keys_for_url(
-            s3_client, environ['S3_BUCKET'], url)
+        png_key = get_png_key_s3(connection, url)
+        image_filename = download_data_file(
+            s3_client, environ['S3_BUCKET'], png_key, 'static')
+        screenshot_label = png_key.split(
+            '/')[0] + '/' + png_key.split('/')[1]
 
-        popular_screenshots += relevant_keys
+        pages.append(
+            {'url': url, 'image_filename': image_filename, "label": screenshot_label})
 
-    print(f"POPULAR SCREENSHOTS: {popular_screenshots}")
-
-    popular_html_files = [png_file.replace(
-        '.png', '.html', ) for png_file in popular_screenshots]
-
-    local_screenshot_files = []
-    screenshot_labels = []
-    timestamps = []
-    for scrape in popular_screenshots:
-        local_filename = download_data_file(
-            s3_client, environ['S3_BUCKET'], scrape, 'static')
-
-        local_screenshot_files.append(local_filename)
-        screenshot_labels.append(scrape.split(
-            '/')[0] + '/' + scrape.split('/')[1])
-
-        timestamp = scrape.split('/')[-1].replace('.png', '')
-        timestamps.append(timestamp)
-
-    page_info = zip(local_screenshot_files,
-                    screenshot_labels,
-                    timestamps,
-                    popular_html_files,
-                    urls)
-
-    return render_template('archived_pages.html', page_info=page_info)
+    return render_template('archived_pages.html', pages=pages)
 
 
 @app.get("/result/<input>")
@@ -364,45 +345,30 @@ def dynamic_page(input):
     """Navigates to a page specific to what the user searched for."""
 
     s3_client = get_s3_client(environ)
+    connection = get_connection(environ)
+    s3_refs = retrieve_searched_for_pages(s3_client, input)
 
-    url_links = retrieve_searched_for_pages(s3_client, input)
-    url_set = set(url_links)
-
-    if len(url_links) == 0:
+    if len(s3_refs) == 0:
         return render_template("search_error.html", input=input)
 
-    popular_screenshots = []
-    for url in url_set:
-        relevant_keys = get_relevant_png_keys_for_url(
-            s3_client, environ['S3_BUCKET'], url)
+    pages = []
+    s3_refs_set = set(s3_refs)
 
-        popular_screenshots += relevant_keys
+    for s3_ref in s3_refs_set:
+        png_key = get_most_recent_png_key(s3_client, environ['S3_BUCKET'], s3_ref)
+        url = get_url(s3_ref, connection)
 
-    popular_html_files = [png_file.replace(
-        '.png', '.html', ) for png_file in popular_screenshots]
+        if png_key == 'No Relevant Keys':
+            return render_template('archived_pages.html')
+    
+        image_filename = download_data_file(
+            s3_client, environ['S3_BUCKET'], png_key, 'static')
+        screenshot_label = png_key.split(
+            '/')[0] + '/' + png_key.split('/')[1]
 
-    local_screenshot_files = []
-    screenshot_labels = []
-    timestamps = []
-    for scrape in popular_screenshots:
-        local_filename = download_data_file(
-            s3_client, environ['S3_BUCKET'], scrape, 'static')
-
-        local_screenshot_files.append(local_filename)
-        screenshot_labels.append(scrape.split(
-            '/')[0] + '/' + scrape.split('/')[1])
-
-        timestamp = scrape.split('/')[-1].replace('.png', '')
-        timestamps.append(timestamp)
-
-    page_info = zip(local_screenshot_files,
-                    screenshot_labels,
-                    timestamps,
-                    popular_html_files,
-                    url_links)
-
-
-    return render_template("result.html", input=input, page_info=page_info)
+        pages.append({'url': url, 'image_filename': image_filename, "label": screenshot_label})
+    
+    return render_template("result.html", pages=pages, input=input)
 
 
 @app.route('/page-history')
@@ -412,26 +378,37 @@ def display_page_history():
     s3_client = get_s3_client(environ)
     connection = get_connection(environ)
 
-    local_img_filename = request.args.get('local_img_filename')
-    screenshot_label = request.args.get('screenshot_label')
-    timestamp = request.args.get('timestamp')
-    html_key = request.args.get('html_key')
     url = request.args.get('url')
 
-    print(local_img_filename)
-    print(screenshot_label)
-    print(timestamp)
-    print(html_key)
-    print(url)
+    screenshots = []
+    relevant_keys = get_relevant_png_keys_for_url(
+            s3_client, environ['S3_BUCKET'], url)
 
-    gpt_summary = get_summary_from_db(html_key, connection)
+    screenshots += relevant_keys
+
+    html_files = [png_file.replace(
+        '.png', '.html', ) for png_file in screenshots]
+
+    local_screenshot_files = []
+    screenshot_labels = []
+    timestamps = []
+    for scrape in screenshots:
+        local_filename = download_data_file(
+            s3_client, environ['S3_BUCKET'], scrape, 'static')
+
+        local_screenshot_files.append(local_filename)
+        screenshot_labels.append(scrape.split(
+            '/')[0] + '/' + scrape.split('/')[1])
+
+        timestamp = scrape.split('/')[-1].replace('.png', '')
+        timestamps.append(timestamp)
+
+    # gpt_summary = get_summary_from_db(html_key, connection)
     webpage_genre = get_genre_from_db(url, connection)
     first_submitted = get_first_submission_time(url, connection)
     number_of_views = get_number_of_views(url, connection)
     number_of_saves = get_number_of_saves(url, connection)
 
-    html_files = get_all_pages_ordered(
-        s3_client, html_key, environ['S3_BUCKET'])
 
     img_files = get_all_screenshots(html_files)
 
@@ -440,6 +417,7 @@ def display_page_history():
 
     pages = zip(html_files, img_files, formatted_ts)
 
+    timestamp = datetime.utcnow().isoformat()
     timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)
     print(timestamp, type(timestamp))
 
@@ -458,8 +436,8 @@ def display_page_history():
     return render_template('page_history.html',
                            pages=pages,
                            url=url,
-                           screenshot_label=screenshot_label,
-                           gpt_summary=gpt_summary,
+                        #    screenshot_label=screenshot_label,
+                        #    gpt_summary=gpt_summary,
                            genre=webpage_genre,
                            first_submitted=first_submitted,
                            number_of_views=number_of_views,
