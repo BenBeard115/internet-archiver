@@ -1,12 +1,6 @@
 """Contains functions to download a website screenshot from their s3 bucket."""
 from os import environ
-from html2image import Html2Image
-from dotenv import load_dotenv
 from boto3 import client
-
-
-hti = Html2Image()
-load_dotenv()
 
 
 def get_s3_client() -> client:

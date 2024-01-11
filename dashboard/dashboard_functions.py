@@ -11,7 +11,18 @@ from download_screenshot import download_data_file, get_s3_client
 
 BUCKET = 'c9-internet-archiver-bucket'
 
-# TODO Add proper sorting to grouped bar charts
+# TODO search by genre
+
+
+def make_searchbar_toggle_radio() -> None:
+    """Makes a searchbar radio."""
+    radio = st.sidebar.radio(label='Search by...', options=[
+        'URL', 'Genre'])
+    st.sidebar.write(
+        """<style>div.row-widget.stRadio > div{flex-direction:row;}</style>""",
+        unsafe_allow_html=True)
+
+    return radio
 
 
 def make_metrics(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame) -> None:
@@ -86,21 +97,33 @@ def make_date_filter(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radi
     return scrape_df, interaction_df
 
 
-def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame) -> None:
+def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame, radio: str) -> None:
     """Makes a searchbar that returns the number of archives of a website and the archive times."""
-    url_search = st.sidebar.text_input(
-        "URL Search", placeholder="Search here...")
+    filter_by = None
+    # Choice of what to search the database by
+    if radio == "Genre":
+        search = st.sidebar.text_input(
+            "Genre Search", placeholder="Search here...")
 
-    if url_search:
-        # Gets dataframe of specified url
-        scrape_df_result_search = scrape_df[scrape_df['url'].str.contains(
-            url_search.lower(), case=False, na=False)]
+        if search:
+            filter_by = 'genre'
+    else:
+        search = st.sidebar.text_input(
+            "URL Search", placeholder="Search here...")
 
-        interaction_df_result_search = interaction_df[interaction_df['url'].str.contains(
-            url_search.lower(), case=False, na=False)]
+        if search:
+            filter_by = 'url'
+
+    if filter_by:
+        # Gets dataframe of specified url or genre
+        scrape_df_result_search = scrape_df[scrape_df[filter_by].str.contains(
+            search.lower(), case=False, na=False)]
+
+        interaction_df_result_search = interaction_df[interaction_df[filter_by].str.contains(
+            search.lower(), case=False, na=False)]
 
         st.sidebar.write(
-            "This URL has been:")
+            f"This {filter_by} has been:")
 
         # Grammar on singular/plural
         archive_pluralise = ''
@@ -248,8 +271,12 @@ def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataF
     screenshot = Image.open(f"./screenshots/{s3_ref.replace('/', '-')}")
 
     st.subheader("Most Popular Site")
+    if len(popular_website["url"]) > 35:
+        website = popular_website['url'][:35] + '...'
+    else:
+        website = popular_website['url']
     st.text(
-        f"{popular_website['url_alias']} with {popular_website['Count']} visits.")
+        f"{website} with {popular_website['Count']} visits.")
     st.image(screenshot)
 
     os.remove(f"./screenshots/{s3_ref.replace('/', '-')}")

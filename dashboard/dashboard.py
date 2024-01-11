@@ -20,8 +20,11 @@ from dashboard_functions import (
     make_popular_visit_bar,
     make_recent_archive_database,
     make_metrics,
-    get_popular_screenshot)
+    get_popular_screenshot,
+    make_searchbar_toggle_radio)
 
+
+# TODO Add auto-refreshing
 
 def make_url_alias(url: str) -> str:
     """Makes an alias for the url."""
@@ -58,30 +61,29 @@ def setup_page():
     """Sets up the main page of the dashboard."""
     img = Image.open("archive_image.png")
 
-    st.set_page_config(page_title="Internet Archiver Dashboard",
+    st.set_page_config(page_title="SnapSite Dashboard",
                        page_icon=img,
                        layout="wide")
 
-    st.title("Internet Archiver Dashboard")
+    st.title("SnapSite Dashboard")
 
 
 if __name__ == "__main__":
     load_dotenv()
     connection = get_connection(environ)
     scrape_df, interaction_df = setup_database(connection)
-    print(scrape_df)
     setup_page()
 
     st.sidebar.write(
-        "[Internet Archiver Website](http://35.178.152.21:5000/)")
+        "[SnapSite: The Website Archiver](http://13.42.9.188:5000/)")
 
-    radio = make_date_radio()
+    date_radio = make_date_radio()
     selected_date_scrape_df, selected_date_interaction_df = make_date_filter(
-        scrape_df, interaction_df, radio)
-    selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
-        selected_date_scrape_df, selected_date_interaction_df)
+        scrape_df, interaction_df, date_radio)
 
-    print(selected_date_interaction_df)
+    search_radio = make_searchbar_toggle_radio()
+    selected_website_scrape_df, selected_website_interaction_df = make_archive_searchbar(
+        selected_date_scrape_df, selected_date_interaction_df, search_radio)
 
     make_metrics(selected_website_scrape_df, selected_website_interaction_df)
     make_daily_tracker_line(interaction_df)
