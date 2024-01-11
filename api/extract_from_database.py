@@ -63,6 +63,25 @@ def get_url(s3_ref: str, conn: extensions.connection) -> str:
     return "Empty Database!"
 
 
+def get_png_key_s3(conn: extensions.connection, url: str) -> str:
+    """Retrieves the key for png most recently uploaded to the S3 for
+    a given URL."""
+    query = f"""SELECT screenshot_s3_ref 
+                    FROM page_scrape 
+                    JOIN url ON page_scrape.url_id = url.url_id 
+                    WHERE url LIKE '%{url}%' 
+                    ORDER BY scrape_at 
+                    DESC LIMIT 1;"""
+    with conn.cursor() as cur:
+        try:
+            cur.execute(query)
+            result = cur.fetchone()[0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+        return result
+
 def get_most_popular_urls(conn: extensions.connection) -> list[str]:
     """Gets the url from the database, given an s3_ref."""
 
@@ -185,4 +204,6 @@ if __name__ == "__main__":
 
     connection = get_connection(environ)
     # print(extract_data(connection, "https://www.telegraph.co.uk/"))
-    print(get_most_popular_urls(connection))
+    print(get_png_key_s3(connection, 'www.rocketleague.com/'))
+    print(get_url(
+        'www.bbc.co.uk/BBC - Home', connection))

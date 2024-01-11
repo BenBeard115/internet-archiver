@@ -65,6 +65,27 @@ def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) 
     return recent_keys
 
 
+def get_most_recent_png_key(s3_client: client, bucket: str, url: str) -> str:
+    """Returns a list of the most recent .png keys uploaded to S3."""
+    
+    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
+
+    if contents is None:
+        return "Empty Database!"
+
+    sorted_contents = sorted(contents, key=lambda x: x['LastModified'], reverse=True)
+    
+    keys = [o['Key'] for o in sorted_contents if url in o['Key']
+            and IMAGE_FILE_FORMAT in o['Key']]
+
+    if len(keys) == 0:
+        return 'No Relevant Keys'
+
+    most_recent_key = keys[0]
+
+    return most_recent_key
+
+
 def get_recent_html_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
     """Returns a list of the most recent .html keys uploaded to S3."""
 
@@ -182,10 +203,7 @@ if __name__ == "__main__":
     # get_object_from_s3(
     #     s3_client, BUCKET, "www.rocketleague.com/Rocket League     Rocket League  - Official Site/2024-01-05T15:53:37.392835.html")
 
-    urls = ['https://www.youtube.co.uk', 'https://www.bbc.co.uk/news/uk-politics-62064552', 'https://www.itv.co.uk', 'https://www.bbc.co.uk',
-            'https://www.theguardian.com/film/2023/dec/31/raging-grace-review-gothic-infused-filipina-immigrant-thriller-paris-zarcilla']
+    urls = ['www.bbc.co.uk']
 
     for url in urls:
-        print(url[8:])
-        print(get_relevant_html_keys_for_url(
-            s3_client, environ['S3_BUCKET'], url))
+        print(get_most_recent_png_key(s3_client, environ['S3_BUCKET'], url))
