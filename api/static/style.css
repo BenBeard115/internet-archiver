@@ -17,12 +17,13 @@ main {
 
 
 h1.display-1 {
-  font-size: 70px;
+  font-size: 80px;
   /* text-align: center; */
   color: #253439;
   /* background-color: #F40105; */
   font-family: "IBM Plex Mono";
   /* background-image: url('https: //media.giphy.com/media/YsUVWDh9buWzT8yLx0/giphy-downsized-large.gif'); */
+  margin-bottom: 0px;
 }
 
 
@@ -33,6 +34,7 @@ h1.display-2 {
   /* background-color: #F40105; */
   font-family: "IBM Plex Mono";
   /* background-image: url('https: //media.giphy.com/media/YsUVWDh9buWzT8yLx0/giphy-downsized-large.gif'); */
+  margin-top: 5px;
 }
 
 
@@ -49,7 +51,7 @@ h1.display-3 {
 h2,
 p {
   /* text-align: center; */
-  font-size: 15px;
+  font-size: 17px;
   color: #253439;
   /* background-color: #F40105; */
   font-family: "IBM Plex Mono";
@@ -90,9 +92,20 @@ input {
   color: #253439;
 }
 
-button {
+button.display-1 {
   background-color: #d15353;
   color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  /* Change cursor to pointer on hover */
+  font-family: "IBM Plex Mono";
+}
+
+
+button.display-2 {
+  color: #253439;
   padding: 10px 20px;
   border: none;
   border-radius: 4px;
