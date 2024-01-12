@@ -229,8 +229,17 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-dashboard-taskdef" {
                 { name: "DB_PASSWORD", value: var.DB_PASSWORD },
                 { name: "AWS_ACCESS_KEY_ID", value: var.AWS_ACCESS_KEY_ID },
                 { name: "AWS_SECRET_ACCESS_KEY", value: var.AWS_SECRET_ACCESS_KEY }
-            ]
+            ],
+            "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": var.AWS_GROUP,
+                "awslogs-region": var.AWS_REGION,
+                "awslogs-stream-prefix": var.AWS_STREAM_PREFIX,
+                "awslogs-create-group": "true"
+            }
         }
+    }
     ])
     execution_role_arn = data.aws_iam_role.execution-role.arn
     memory = 2048
@@ -299,8 +308,17 @@ resource "aws_ecs_task_definition" "c9-internet-archiver-website-taskdef" {
                 { name: "SCRAPE_TABLE_NAME", value: var.SCRAPE_TABLE_NAME },
                 { name: "OPENAI_API_KEY", value: var.OPENAI_API_KEY }
                 
-            ]
+            ],
+            "logConfiguration": {
+            "logDriver": "awslogs",
+            "options": {
+                "awslogs-group": var.AWS_GROUP,
+                "awslogs-region": var.AWS_REGION,
+                "awslogs-stream-prefix": var.AWS_STREAM_PREFIX,
+                "awslogs-create-group": "true"
+            }
         }
+    }
     ])
     execution_role_arn = data.aws_iam_role.execution-role.arn
     memory = 2048
