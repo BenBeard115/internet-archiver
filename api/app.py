@@ -45,15 +45,8 @@ from extract_from_database import (
 )
 
 from download_from_s3 import (
-    get_object_keys,
-    filter_keys_by_type,
-    filter_keys_by_website,
-    get_recent_png_s3_keys,
-    get_recent_html_s3_keys,
-    format_object_key_titles,
     get_object_from_s3,
     download_data_file,
-    get_all_pages_ordered,
     get_all_screenshots,
     get_scrape_times,
     format_timestamps,
@@ -168,6 +161,9 @@ def index():
 def submit():
     """End point to submit a story."""
 
+
+    status = request.args.get('status')
+
     s3_client = get_s3_client(environ)
     connection = get_connection(environ)
 
@@ -189,7 +185,10 @@ def submit():
 
         pages.append({'url': url, 'image_filename': image_filename, "label": screenshot_label})
 
-    return render_template("submit.html", pages=pages, input=input)
+    if status == 'failure':
+        return render_template('submit.html', result='Sorry that URL is currently not supported!', pages=pages)
+
+    return render_template('submit.html', pages=pages)
 
 
 @app.route('/save', methods=['POST'])
@@ -332,7 +331,7 @@ def display_page_history():
 
     url = request.args.get('url')
 
-    png_files = get_png_keys_s3(connection, url)
+    png_files = get_png_keys_s3(connection, url)[::-1]
     html_files = [png_file.replace(
         '.png', '.html', ) for png_file in png_files]
 
