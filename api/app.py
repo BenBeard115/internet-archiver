@@ -170,7 +170,6 @@ def index():
 def submit():
     """End point to submit a story."""
 
-
     status = request.args.get('status')
 
     s3_client = get_s3_client(environ)
@@ -261,11 +260,26 @@ def save():
         number_of_views = get_number_of_views(url, connection)
         number_of_saves = get_number_of_saves(url, connection)
 
+        png_files = get_png_keys_s3(connection, url)[::-1]
+        html_files = [png_file.replace(
+            '.png', '.html', ) for png_file in png_files]
+
+        for scrape in png_files:
+            download_data_file(
+                s3_client, environ['S3_BUCKET'], scrape, 'static')
+
+        img_files = get_all_screenshots(html_files)
+        scrape_times = get_scrape_times(html_files)
+        formatted_ts = format_timestamps(scrape_times)
+
+        scrape_types = [get_is_human_from_db(html_file, connection)
+                        for html_file in html_files]
+
+        pages = zip(html_files, img_files, formatted_ts, scrape_types)
+
         return render_template('page_history.html',
-                               img_filename=img_object_key_s3,
-                               html_filename=html_object_key,
+                               pages=pages,
                                url=url,
-                               timestamp=timestamp,
                                gpt_summary=gpt_summary,
                                genre=webpage_genre,
                                first_submitted=first_submitted,
@@ -367,8 +381,6 @@ def display_page_history():
         timestamps.append(timestamp)
 
     html_key = html_files[0]
-    screenshot_label = html_key.split(
-        '/')[0] + '/' + scrape.split('/')[1]
 
     gpt_summary = get_summary_from_db(html_key, connection)
     webpage_genre = get_genre_from_db(url, connection)
@@ -405,7 +417,6 @@ def display_page_history():
     return render_template('page_history.html',
                            pages=pages,
                            url=url,
-                           screenshot_label=screenshot_label,
                            gpt_summary=gpt_summary,
                            genre=webpage_genre,
                            first_submitted=first_submitted,

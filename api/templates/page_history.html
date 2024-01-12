@@ -37,7 +37,7 @@
             <img src="{{ url_for('static', filename=img_file) }}" alt="Webpage Thumbnail" height="350">
             <div class="metadata">
                 <h2>{{ ts }}</h2>
-                <p>Download: {{ html_file }}</p>
+                <p>{{ html_file }}</p>
                 <!-- Add other metadata fields -->
                 <span class="scrape-type" title="Scraped by a {{ 'user' if scrape_type else 'bot' }}">{{ '👤' if
                     scrape_type else '🤖' }}</span>
