@@ -66,10 +66,11 @@ def get_url(s3_ref: str, conn: extensions.connection) -> str:
 def get_recent_png_key_s3(conn: extensions.connection, url: str) -> str:
     """Retrieves the key for png most recently uploaded to the S3 for
     a given URL."""
+
     query = f"""SELECT screenshot_s3_ref 
                     FROM page_scrape 
                     JOIN url ON page_scrape.url_id = url.url_id 
-                    WHERE url LIKE '%{url}%' 
+                    WHERE url LIKE '{url}' 
                     ORDER BY scrape_at 
                     DESC LIMIT 1;"""
     with conn.cursor() as cur:
@@ -86,10 +87,11 @@ def get_recent_png_key_s3(conn: extensions.connection, url: str) -> str:
 def get_png_keys_s3(conn: extensions.connection, url: str) -> str:
     """Retrieves the key for png most recently uploaded to the S3 for
     a given URL."""
+
     query = f"""SELECT screenshot_s3_ref 
                     FROM page_scrape 
                     JOIN url ON page_scrape.url_id = url.url_id 
-                    WHERE url LIKE '%{url}%';"""
+                    WHERE url LIKE '{url}';"""
     with conn.cursor() as cur:
         try:
             cur.execute(query)

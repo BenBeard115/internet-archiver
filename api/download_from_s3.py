@@ -86,20 +86,6 @@ def get_most_recent_png_key(s3_client: client, bucket: str, url: str) -> str:
     return most_recent_key
 
 
-def get_recent_html_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
-    """Returns a list of the most recent .html keys uploaded to S3."""
-
-    contents = s3_client.list_objects(Bucket=bucket)['Contents']
-
-    sorted_contents = sorted(
-        contents, key=lambda x: x['LastModified'], reverse=True)
-
-    recent_keys = [
-        o['Key'] for o in sorted_contents if '.html' in o["Key"]
-    ][:num_files]
-
-    return recent_keys
-
 
 def format_object_key_titles(keys: list[str]) -> list[str]:
     """Formats the keys as standardised titles to be listed on the website."""
@@ -134,22 +120,6 @@ def get_object_from_s3(s3_client: client, bucket: str, filename: str) -> str:
     return html
 
 
-def get_all_pages_ordered(s3_client: client, html_filename: str, bucket: str) -> list[str]:
-    """Gets all previous scrapes of a webpage and returns the keys in reverse chronological order."""
-
-    startswith = f"{html_filename.split('/')[0]}/{html_filename.split('/')[1]}"
-
-    contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
-
-    if contents is None:
-        return "Empty Database!"
-
-    sorted_contents = sorted(
-        contents, key=lambda x: x['LastModified'], reverse=True)
-
-    return [object['Key'] for object in sorted_contents if object['Key'].startswith(startswith) and object['Key'].endswith('.html')]
-
-
 def get_all_screenshots(html_files: list[str]) -> list[str]:
     """Gets all previous screenshots of a webpage given an html key."""
 
@@ -171,7 +141,7 @@ def format_timestamps(timestamps: list[str]) -> list[str]:
 
 
 def get_relevant_html_keys_for_url(s3_client: client, bucket: str, url: str) -> list[str]:
-    """Returns a list of object keys from a given bucket, given a constraint."""
+    """Returns a list of html keys from a given bucket, given a constraint."""
     url_without_https = url[8:]
     contents = s3_client.list_objects(Bucket=bucket)['Contents']
 
