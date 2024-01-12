@@ -77,7 +77,7 @@ if __name__ == "__main__":
     scrape_df, interaction_df = setup_database(connection)
 
     st.sidebar.write(
-        "[SnapSite: The Website Archiver](http://13.42.9.188:5000/)")
+        "[SnapSite: The Website Archiver](http://13.41.189.139:5000/)")
 
     date_radio = make_date_radio()
     selected_date_scrape_df, selected_date_interaction_df = make_date_filter(
