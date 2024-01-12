@@ -221,6 +221,7 @@ h2.webpage-history {
   /* 2/3 of the container */
   padding-left: 20px;
   box-sizing: border-box;
+  position: relative;
 }
 
 .metadata h2 {
@@ -228,6 +229,12 @@ h2.webpage-history {
   /* Remove default margin for h2 */
 }
 
+.scrape-type {
+  position: absolute;
+  top: 88%;
+  right: 1.5%;
+  font-size: 1.5em;
+}
 
 h1.page-instance {
   text-align: center;

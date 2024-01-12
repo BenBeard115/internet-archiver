@@ -15,9 +15,7 @@
 
         <h1 class="page-instance">Archived Webpage</h1>
         <h2 class="page-instance">{{ timestamp }}</h2>
-        <h3 class="page-instance">
-            {{ url }}
-        </h3>
+        <h2 class="webpage-history">URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
         <p>HTML File: <a href="{{ url_for('static', filename=html_filename) }}" target="_blank">{{ html_filename
                 }}</a></p>
         </p>

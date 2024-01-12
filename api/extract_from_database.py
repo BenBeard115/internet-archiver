@@ -98,14 +98,15 @@ def get_png_keys_s3(conn: extensions.connection, url: str) -> str:
             rows = cur.fetchall()
             if len(rows):
                 keys = [row[0] for row in rows]
-            
+
             result = keys
-    
+
         except KeyError as exc:
             raise KeyError(
                 "There were no values with that reference!") from exc
 
         return result
+
 
 def get_most_popular_urls(conn: extensions.connection) -> list[str]:
     """Gets the url from the database, given an s3_ref."""
@@ -221,6 +222,23 @@ def get_number_of_saves(url: str, conn: extensions.connection) -> int:
                 "There were no values with that reference!") from exc
 
     return url_extract
+
+
+def get_is_human_from_db(s3_ref: str, conn: extensions.connection) -> bool:
+    """Checks is_human bool for a given s3_ref."""
+
+    query = f"""SELECT is_human FROM page_scrape
+                 WHERE html_s3_ref LIKE '%{s3_ref}%'"""
+
+    with conn.cursor() as cur:
+        cur.execute(query)
+        try:
+            is_human = cur.fetchall()[0][0]
+        except KeyError as exc:
+            raise KeyError(
+                "There were no values with that reference!") from exc
+
+    return is_human
 
 
 if __name__ == "__main__":
