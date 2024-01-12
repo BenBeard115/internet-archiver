@@ -381,8 +381,6 @@ def display_page_history():
         timestamps.append(timestamp)
 
     html_key = html_files[0]
-    screenshot_label = html_key.split(
-        '/')[0] + '/' + scrape.split('/')[1]
 
     gpt_summary = get_summary_from_db(html_key, connection)
     webpage_genre = get_genre_from_db(url, connection)
@@ -419,7 +417,6 @@ def display_page_history():
     return render_template('page_history.html',
                            pages=pages,
                            url=url,
-                           screenshot_label=screenshot_label,
                            gpt_summary=gpt_summary,
                            genre=webpage_genre,
                            first_submitted=first_submitted,
