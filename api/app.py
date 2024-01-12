@@ -41,7 +41,8 @@ from extract_from_database import (
     get_number_of_views,
     get_number_of_saves,
     get_recent_png_key_s3,
-    get_png_keys_s3
+    get_png_keys_s3,
+    get_is_human_from_db
 )
 
 from download_from_s3 import (
@@ -157,6 +158,14 @@ def convert_iso_to_datetime(dt_str: str) -> datetime:
     return dt + timedelta(microseconds=us)
 
 
+def remove_png_files(folder_path):
+    for file in os.listdir(folder_path):
+        if file.endswith(".png"):
+            file_path = os.path.join(folder_path, file)
+            os.remove(file_path)
+            print(f"Removed: {file_path}")
+
+
 @app.route('/')
 def index():
     """First page of the website."""
@@ -171,12 +180,15 @@ def submit():
     s3_client = get_s3_client(environ)
     connection = get_connection(environ)
 
+    remove_png_files('static')
+
     s3_refs = get_most_recently_saved_web_pages()
     pages = []
     s3_refs_set = set(s3_refs)
 
     for s3_ref in s3_refs_set:
-        png_key = get_most_recent_png_key(s3_client, environ['S3_BUCKET'], s3_ref)
+        png_key = get_most_recent_png_key(
+            s3_client, environ['S3_BUCKET'], s3_ref)
         url = get_url(s3_ref, connection)
 
         if png_key == 'No Relevant Keys':
@@ -187,7 +199,8 @@ def submit():
         screenshot_label = png_key.split(
             '/')[0] + '/' + png_key.split('/')[1]
 
-        pages.append({'url': url, 'image_filename': image_filename, "label": screenshot_label})
+        pages.append(
+            {'url': url, 'image_filename': image_filename, "label": screenshot_label})
 
     return render_template("submit.html", pages=pages, input=input)
 
@@ -307,19 +320,21 @@ def dynamic_page(input):
     s3_refs_set = set(s3_refs)
 
     for s3_ref in s3_refs_set:
-        png_key = get_most_recent_png_key(s3_client, environ['S3_BUCKET'], s3_ref)
+        png_key = get_most_recent_png_key(
+            s3_client, environ['S3_BUCKET'], s3_ref)
         url = get_url(s3_ref, connection)
 
         if png_key == 'No Relevant Keys':
             return render_template('archived_pages.html')
-    
+
         image_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], png_key, 'static')
         screenshot_label = png_key.split(
             '/')[0] + '/' + png_key.split('/')[1]
 
-        pages.append({'url': url, 'image_filename': image_filename, "label": screenshot_label})
-    
+        pages.append(
+            {'url': url, 'image_filename': image_filename, "label": screenshot_label})
+
     return render_template("result.html", pages=pages, input=input)
 
 
@@ -329,6 +344,8 @@ def display_page_history():
 
     s3_client = get_s3_client(environ)
     connection = get_connection(environ)
+
+    remove_png_files('static')
 
     url = request.args.get('url')
 
@@ -352,7 +369,7 @@ def display_page_history():
 
     html_key = html_files[0]
     screenshot_label = html_key.split(
-            '/')[0] + '/' + scrape.split('/')[1]
+        '/')[0] + '/' + scrape.split('/')[1]
 
     gpt_summary = get_summary_from_db(html_key, connection)
     webpage_genre = get_genre_from_db(url, connection)
@@ -360,13 +377,15 @@ def display_page_history():
     number_of_views = get_number_of_views(url, connection)
     number_of_saves = get_number_of_saves(url, connection)
 
-
     img_files = get_all_screenshots(html_files)
 
     scrape_times = get_scrape_times(html_files)
     formatted_ts = format_timestamps(scrape_times)
 
-    pages = zip(html_files, img_files, formatted_ts)
+    scrape_types = [get_is_human_from_db(html_file, connection)
+                    for html_file in html_files]
+
+    pages = zip(html_files, img_files, formatted_ts, scrape_types)
 
     timestamp = datetime.utcnow().isoformat()
     timestamp = convert_iso_to_datetime(timestamp).replace(microsecond=0)

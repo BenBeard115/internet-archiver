@@ -29,7 +29,7 @@
 
     <hr>
 
-    {% for html_file, img_file, ts in pages %}
+    {% for html_file, img_file, ts, scrape_type in pages %}
     <a
         href="{{ url_for('display_page_instance', html_file=html_file, image_filename=img_file, label=label, url=url, timestamp=ts)}}">
         <div class="capture-instance">
@@ -39,6 +39,9 @@
                 <h2>{{ ts }}</h2>
                 <p>Download: {{ html_file }}</p>
                 <!-- Add other metadata fields -->
+                <span class="scrape-type" title="Scraped by a {{ 'user' if scrape_type else 'bot' }}">{{ '👤' if
+                    scrape_type else '🤖' }}</span>
+
             </div>
 
         </div>
