@@ -72,7 +72,9 @@ USER_FRIENDLY_FORMAT = "%d %B %Y - %I:%M %p"
 
 load_dotenv()
 
-hti = Html2Image()
+hti = Html2Image(custom_flags=["--no-sandbox",
+                               "--no-first-run", "--disable-gpu", "--use-fake-ui-for-media-stream",
+                               "--use-fake-device-for-media-stream", "--disable-sync"])
 
 app = Flask(__name__)
 
@@ -289,6 +291,7 @@ def save():
 
     except Exception as e:
         print(f"Error: {str(e)}")
+        print(e.args[0])
         return redirect('/submit?status=failure')
 
 
