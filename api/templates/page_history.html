@@ -7,7 +7,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
         rel="stylesheet" />
-    <title>Webpage Capture History</title>
+    <title>SnapSite: History</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
 </head>
 
 
@@ -48,7 +50,7 @@
     </a>
     {% endfor %}
 
-        <hr>
+    <hr>
     <button class="display-1" onclick='window.location.href = "/"'>
         Return Home
     </button>
