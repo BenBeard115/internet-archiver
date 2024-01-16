@@ -14,12 +14,13 @@
     <div style="text-align: center;">
 
         <h1 class="page-instance">Archived Webpage</h1>
-        <h2 class="page-instance">{{ timestamp }}</h2>
-        <h2 class="webpage-history">URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
-        <p>HTML File: <a href="{{ url_for('static', filename=html_filename) }}" target="_blank">{{ html_filename
-                }}</a></p>
-        </p>
 
+        <h2 class="webpage-history">🔗 URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
+        <h2 class="page-instance">⏰ DATE ARCHIVED: {{ timestamp }}</h2>
+        <p>HTML File:
+            <a href="{{ url_for('view_file', local_filename=local_filename) }}" target="_blank">View</a>
+            <a href="{{ url_for('download_file', local_filename=local_filename) }}" target="_blank">Download</a>
+        </p>
 
         <iframe class="embed-container" src="data:text/html;base64, {{ html_content }}" title="description" width="80%"
             height="500"></iframe>

@@ -15,18 +15,20 @@
 
     <h1 class="webpage-history">Webpage Capture History</h1>
 
-    <h2 class="webpage-history">URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
+    <div class="flex-container">
+        <div class="left-column">
+            <h2 class="webpage-history">🔗 URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
+            <h2 class="webpage-history">👉 FIRST SUBMITTED: {{ first_submitted }}</h2>
+            <h2 class="webpage-history">👁️ NUMBER OF VIEWS: {{ number_of_views }}</h2>
+            <h2 class="webpage-history">💾 NUMBER OF SAVES: {{ number_of_saves }}</h2>
 
-    <h2 class="webpage-history">FIRST SUBMITTED: {{ first_submitted }}</h2>
+        </div>
 
-    <h2 class="webpage-history">NUMBER OF VIEWS: {{ number_of_views }}</h2>
-
-    <h2 class="webpage-history">NUMBER OF SAVES: {{ number_of_saves }}</h2>
-
-    <h2 class="webpage-history">SUMMARY: {{ gpt_summary }}</h2>
-
-    <h2 class="webpage-history">GENRE: {{ genre }}</h2>
-
+        <div class="right-column">
+            <h2 class="webpage-history">GENRE: {{ genre }}</h2>
+            <h2 class="webpage-history">📖 SUMMARY: {{ gpt_summary }}</h2>
+        </div>
+    </div>
     <hr>
 
     {% for html_file, img_file, ts, scrape_type in pages %}
@@ -36,10 +38,12 @@
 
             <img src="{{ url_for('static', filename=img_file) }}" alt="Webpage Thumbnail" height="350">
             <div class="metadata">
-                <h2>{{ ts }}</h2>
-                <p>{{ html_file }}</p>
+                <h2>⏰ {{ ts }}</h2>
+                <!-- <p>
+                    <marquee>{{ html_file }}</marquee>
+                </p> -->
                 <!-- Add other metadata fields -->
-                <span class="scrape-type" title="Scraped by a {{ 'user' if scrape_type else 'bot' }}">{{ '👤' if
+                <span class="scrape-type" title="Archived by {{ 'user' if scrape_type else 'bot' }}">{{ '👤' if
                     scrape_type else '🤖' }}</span>
 
             </div>
@@ -48,7 +52,7 @@
     </a>
     {% endfor %}
 
-        <hr>
+    <hr>
     <button class="display-1" onclick='window.location.href = "/"'>
         Return Home
     </button>
