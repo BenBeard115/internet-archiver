@@ -4,7 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ input }}</title>
+    <title>SnapSite: {{ input }}</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
         rel="stylesheet" />
@@ -17,8 +19,7 @@
         <div class="menu-container">
             {% for page in pages %}
             <div class="menu-item">
-                <a
-                    href="{{ url_for('display_page_history', url=page.url) }}">
+                <a href="{{ url_for('display_page_history', url=page.url) }}">
                     <img src="{{ url_for('static', filename=page.image_filename) }}" alt="Screenshot">
                     <p>{{ page.label }}</p>
                 </a>

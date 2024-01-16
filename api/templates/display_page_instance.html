@@ -7,19 +7,22 @@
     <link rel="stylesheet" href="static/style.css">
     <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
         rel="stylesheet" />
-    <title>Result</title>
+    <title>SnapSite: The Internet Archiver</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
 </head>
 
 <body>
     <div style="text-align: center;">
 
         <h1 class="page-instance">Archived Webpage</h1>
-        <h2 class="page-instance">{{ timestamp }}</h2>
-        <h2 class="webpage-history">URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
-        <p>HTML File: <a href="{{ url_for('static', filename=html_filename) }}" target="_blank">{{ html_filename
-                }}</a></p>
-        </p>
 
+        <h2 class="webpage-history">🔗 URL: <a href="{{ url }}" target="_blank">{{ url }}</a></h2>
+        <h2 class="page-instance">⏰ DATE ARCHIVED: {{ timestamp }}</h2>
+        <p>HTML File:
+            <a href="{{ url_for('view_file', local_filename=local_filename) }}" target="_blank">View</a>
+            <a href="{{ url_for('download_file', local_filename=local_filename) }}" target="_blank">Download</a>
+        </p>
 
         <iframe class="embed-container" src="data:text/html;base64, {{ html_content }}" title="description" width="80%"
             height="500"></iframe>

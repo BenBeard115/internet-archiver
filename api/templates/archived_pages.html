@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>The Internet Archiver - Saved Pages</title>
-        <link rel="stylesheet" href="static/style.css">
-        <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
-            rel="stylesheet" />
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnapSite: Archived Pages</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗂️</text></svg>">
+    <link rel="stylesheet" href="static/style.css">
+    <link href="https://fonts.googleapis.com/css?family=IBM+Plex+Mono|Inconsolata|Lora|Rubik+Doodle+Shadow"
+        rel="stylesheet" />
+</head>
 
-    <body>
-        <!-- HEADER COMPONENT -->
-        <header class="container text-center">
+<body>
+    <!-- HEADER COMPONENT -->
+    <header class="container text-center">
         <h1 class="display-2">🗃️ Archived Pages</h1>
 
         <div>
@@ -30,7 +32,7 @@
         </form>
 
 
- <h1 class="display-3">Popular Web Pages</h1>
+        <h1 class="display-3">Popular Web Pages</h1>
         <div>
             <p>Check out the most popular web pages we have archived.
             </p>
@@ -40,8 +42,7 @@
         <div class="menu-container">
             {% for page in pages %}
             <div class="menu-item">
-                <a
-                    href="{{ url_for('display_page_history', url=page.url) }}">
+                <a href="{{ url_for('display_page_history', url=page.url) }}">
                     <img src="{{ url_for('static', filename=page.image_filename) }}" alt="Screenshot">
                     <p>{{ page.label }}</p>
                 </a>

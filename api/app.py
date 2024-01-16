@@ -15,7 +15,8 @@ from flask import (
     render_template,
     request,
     redirect,
-    send_from_directory
+    send_from_directory,
+    send_file
 )
 from html2image import Html2Image
 
@@ -153,9 +154,21 @@ def convert_iso_to_datetime(dt_str: str) -> datetime:
     return dt + timedelta(microseconds=us)
 
 
-def remove_png_files(folder_path):
+def remove_png_files(folder_path: str) -> None:
+    """Removes all .png files in a folder."""
+
     for file in os.listdir(folder_path):
         if file.endswith(".png"):
+            file_path = os.path.join(folder_path, file)
+            os.remove(file_path)
+            print(f"Removed: {file_path}")
+
+
+def remove_html_files(folder_path: str) -> None:
+    """Removes all .html files in a folder."""
+
+    for file in os.listdir(folder_path):
+        if file.endswith(".html"):
             file_path = os.path.join(folder_path, file)
             os.remove(file_path)
             print(f"Removed: {file_path}")
@@ -441,17 +454,59 @@ def display_page_instance():
         s3_client, environ['S3_BUCKET'], html_key)
     html_content_base64 = base64.b64encode(html_object.encode()).decode()
 
+    local_filename = html_key.replace('/', '_')
+
     return render_template('display_page_instance.html',
                            html_content=html_content_base64,
+                           html_key=html_key,
+                           local_filename=local_filename,
                            url=url,
                            timestamp=timestamp)
 
 
-@app.route('/download/<filename>')
-def download_file(filename):
+@app.route('/view/<local_filename>')
+def view_file(local_filename):
+    """Allows user to view archived webpage."""
+
+    remove_html_files('static')
+
+    filename = local_filename.replace('_', '/')
+
+    s3_client = get_s3_client(environ)
+    html_object = get_object_from_s3(s3_client, environ['S3_BUCKET'], filename)
+
+    local_filename = filename.replace('/', '_')
+
+    local_path = os.path.join('static', local_filename)
+    with open(local_path, 'w', encoding='utf-8') as file:
+        file.write(html_object)
+
+    return send_from_directory('static', local_filename)
+
+
+@app.route('/download/<local_filename>')
+def download_file(local_filename):
     """Allows user to download archived webpage."""
 
-    return send_from_directory('static', filename)
+    remove_html_files('static')
+
+    filename = local_filename.replace('_', '/')
+
+    # Download the HTML file from S3
+    s3_client = get_s3_client(environ)
+    html_object = get_object_from_s3(s3_client, environ['S3_BUCKET'], filename)
+
+    local_filename = filename.replace('/', '_')
+
+    # Save the HTML content locally
+    local_path = os.path.join('static', local_filename)
+    with open(local_path, 'w', encoding='utf-8') as file:
+        file.write(html_object)
+
+    # Serve the file using send_from_directory
+    # return send_from_directory('static', local_filename)
+
+    return send_file(local_path, as_attachment=True, download_name=filename)
 
 
 @app.route('/limitations')
