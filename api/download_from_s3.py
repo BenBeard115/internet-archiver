@@ -1,7 +1,7 @@
 """Functions to download HTML and CSS files from S3 bucket."""
 
-from datetime import datetime, timedelta
-from os import environ, path, mkdir
+from datetime import datetime
+from os import environ
 
 from boto3 import client
 from dotenv import load_dotenv
@@ -21,7 +21,7 @@ def get_s3_client() -> client:
                   aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
 
 
-def get_object_keys(s3_client: client, bucket: str) -> list[str]:
+def get_object_keys(s3_client: client, bucket: str) -> list[str] | None:
     """Returns a list of object keys from a given bucket."""
 
     contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
@@ -47,13 +47,13 @@ def filter_keys_by_website(keys: list[str], domain: str = None) -> list[str]:
     return filtered_keys
 
 
-def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str]:
+def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) -> list[str] | None:
     """Returns a list of the most recent .png keys uploaded to S3."""
 
     contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
 
     if contents is None:
-        return "Empty Database!"
+        return None
 
     sorted_contents = sorted(
         contents, key=lambda x: x['LastModified'], reverse=True)
@@ -65,32 +65,34 @@ def get_recent_png_s3_keys(s3_client: client, bucket: str, num_files: int = 10) 
     return recent_keys
 
 
-def get_most_recent_png_key(s3_client: client, bucket: str, url: str) -> str:
+def get_most_recent_png_key(s3_client: client, bucket: str, url: str) -> str | None:
     """Returns a list of the most recent .png keys uploaded to S3."""
-    
+
     contents = s3_client.list_objects(Bucket=bucket).get('Contents', None)
 
     if contents is None:
-        return "Empty Database!"
+        return None
 
-    sorted_contents = sorted(contents, key=lambda x: x['LastModified'], reverse=True)
-    
+    sorted_contents = sorted(
+        contents, key=lambda x: x['LastModified'], reverse=True)
+
     keys = [o['Key'] for o in sorted_contents if url in o['Key']
             and IMAGE_FILE_FORMAT in o['Key']]
 
     if len(keys) == 0:
-        return 'No Relevant Keys'
+        return
 
     most_recent_key = keys[0]
 
     return most_recent_key
 
 
-
-def format_object_key_titles(keys: list[str]) -> list[str]:
+def format_object_key_titles(keys: list[str]) -> list[str] | None:
     """Formats the keys as standardised titles to be listed on the website."""
 
     formatted_keys = []
+    if len(keys) == 0:
+        return
 
     for key in keys:
         formatted_key = key.split(
@@ -99,7 +101,7 @@ def format_object_key_titles(keys: list[str]) -> list[str]:
     return set(formatted_keys)
 
 
-def download_data_file(s3_client: client, bucket: str, key: str, folder_name: str) -> str:
+def download_data_file(s3_client: client, bucket: str, key: str, folder_name: str) -> str | None:
     """Downloads the files with relevant keys to a folder name of choice."""
 
     new_filename = key.replace('/', '_')
@@ -108,7 +110,7 @@ def download_data_file(s3_client: client, bucket: str, key: str, folder_name: st
     try:
         s3_client.download_file(bucket, key, f"{folder_name}/{new_filename}")
     except:
-        return None
+        return
 
     return new_filename
 
@@ -160,30 +162,32 @@ def get_relevant_png_keys_for_url_from_s3(s3_client: client, bucket: str, url: s
     return [o['Key'] for o in contents if o['Key'].startswith(url_without_https) and o['Key'].endswith('.png')]
 
 
-def retrieve_searched_for_pages(s3_client: client, input: str):
+def retrieve_searched_for_pages(s3_client: client, input: str) -> list[str] | None:
     """Get the relevant pages that have been searched for."""
 
     keys = get_object_keys(s3_client, environ['S3_BUCKET'])
     if keys is None:
-        return 'Empty Database!'
+        return
 
     png_keys = filter_keys_by_type(keys, '.png')
     relevant_keys = filter_keys_by_website(png_keys, input)
-    
+
     return [relevant_key.split(
             '/')[0] + '/' + relevant_key.split('/')[1] for relevant_key in relevant_keys]
 
 
-def get_most_recently_saved_web_pages() -> dict:
+def get_most_recently_saved_web_pages() -> dict | None:
     """Get the most recently saved web pages to display on the website."""
     s3_client = client('s3',
                        aws_access_key_id=environ['AWS_ACCESS_KEY_ID'],
                        aws_secret_access_key=environ['AWS_SECRET_ACCESS_KEY'])
     keys = get_recent_png_s3_keys(s3_client, environ['S3_BUCKET'])
-    titles = format_object_key_titles(keys)
-    
-    return [title for title in titles]
+    print(keys)
+    if keys is None:
+        return
 
+    titles = format_object_key_titles(keys)
+    return [title for title in titles]
 
 if __name__ == "__main__":
 
