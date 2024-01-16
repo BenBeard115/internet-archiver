@@ -193,6 +193,9 @@ def submit():
     remove_png_files('static')
 
     s3_refs = get_most_recently_saved_web_pages()
+    if s3_refs is None:
+        return render_template('submit.html')
+
     pages = []
     s3_refs_set = set(s3_refs)
 
@@ -201,8 +204,8 @@ def submit():
             s3_client, environ['S3_BUCKET'], s3_ref)
         url = get_url(s3_ref, connection)
 
-        if png_key == 'No Relevant Keys':
-            return render_template('archived_pages.html')
+        if png_key is None:
+            return render_template('submit.html')
 
         image_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], png_key, 'static')
@@ -352,9 +355,6 @@ def dynamic_page(input):
         png_key = get_most_recent_png_key(
             s3_client, environ['S3_BUCKET'], s3_ref)
         url = get_url(s3_ref, connection)
-
-        if png_key == 'No Relevant Keys':
-            return render_template('archived_pages.html')
 
         image_filename = download_data_file(
             s3_client, environ['S3_BUCKET'], png_key, 'static')
