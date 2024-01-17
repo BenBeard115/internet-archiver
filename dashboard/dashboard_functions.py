@@ -25,7 +25,7 @@ def make_searchbar_toggle_radio() -> None:
 
 def make_metrics(scrape_data: pd.DataFrame, interaction_data: pd.DataFrame) -> None:
     """Creates metrics for number of archives, visits and saves."""
-    archives = scrape_data[scrape_data["is_human"] == True]['url'].count()
+    archives = scrape_data['url'].nunique()
     visits = interaction_data[interaction_data["type"]
                               == 'visit']['url'].count()
     saves = interaction_data[interaction_data["type"]
@@ -125,8 +125,7 @@ def make_archive_searchbar(scrape_df: pd.DataFrame, interaction_df: pd.DataFrame
 
         # Grammar on singular/plural
         archive_pluralise = ''
-        archive_count = scrape_df_result_search[scrape_df_result_search["is_human"]
-                                                == True].shape[0]
+        archive_count = scrape_df_result_search['url'].nunique()
         if archive_count != 1:
             archive_pluralise = 's'
 
@@ -168,7 +167,7 @@ def make_hourly_tracker_line(data: pd.DataFrame) -> None:
     saved = alt.Chart(data).mark_line().encode(
         x=alt.X("hours(interact_at):O").title("Time"),
 
-        y=alt.Y("count(url):Q").title("Archives"),
+        y=alt.Y("count(url):Q").title("Count"),
         color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
             "Type"))
 
@@ -182,7 +181,7 @@ def make_daily_tracker_line(data: pd.DataFrame) -> None:
     archived = alt.Chart(data).mark_line().encode(
         x=alt.X("monthdate(interact_at):O").title("Time"),
 
-        y=alt.Y("count(url):Q").title("Archives"),
+        y=alt.Y("count(url):Q").title("Count"),
         color=alt.Color("type", scale=alt.Scale(range=['#5A5A5A', '#d15353'])).title(
             "Type"))
 
@@ -257,7 +256,7 @@ def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataF
     if not os.path.exists("./screenshots"):
         os.makedirs("./screenshots")
 
-    popular_website = interaction_data.groupby(['url_alias', "url"])['url_alias'].count(
+    popular_website = interaction_data.groupby(['url', 'url_alias'])['url_alias'].count(
     ).reset_index(name='Count').sort_values(['Count'], ascending=False).head(1).iloc[0]
 
     s3_ref = scrape_data[scrape_data["url"] == popular_website["url"]].tail(
@@ -275,7 +274,8 @@ def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataF
     else:
         website = popular_website['url']
     st.text(
-        f"{website} with {popular_website['Count']} visits.")
+        f"{website}")
+    #  with {popular_website['Count']} visits.
     st.image(screenshot)
 
     os.remove(f"./screenshots/{s3_ref.replace('/', '-')}")
