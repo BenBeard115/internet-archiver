@@ -259,7 +259,7 @@ def get_popular_screenshot(scrape_data: pd.DataFrame, interaction_data: pd.DataF
     popular_website = interaction_data.groupby(['url', 'url_alias'])['url_alias'].count(
     ).reset_index(name='Count').sort_values(['Count'], ascending=False).head(1).iloc[0]
 
-    s3_ref = scrape_data[scrape_data["url"] == popular_website["url"]].tail(
+    s3_ref = scrape_data[scrape_data["url_alias"] == popular_website["url_alias"]].tail(
         1).iloc[0]['screenshot_s3_ref']
 
     download_data_file(
