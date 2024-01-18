@@ -44,7 +44,7 @@ h1.display-3 {
   color: #253439;
   /* background-color: #F40105; */
   font-family: "IBM Plex Mono";
-  /* background-image: url('https: //media.giphy.com/media/YsUVWDh9buWzT8yLx0/giphy-downsized-large.gif'); */
+  margin-top: 50px;
 }
 
 
@@ -90,6 +90,14 @@ input {
   border-radius: 4px;
   font-family: "IBM Plex Mono";
   color: #253439;
+}
+
+h1.results-page {
+  margin-top: 50px;
+  margin-left: 50px;
+  font-size: 50px;
+  color: #253439;
+  font-family: "IBM Plex Mono";
 }
 
 button.display-1 {
