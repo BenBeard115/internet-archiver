@@ -244,7 +244,7 @@ def make_recent_archive_database(data: pd.DataFrame) -> None:
     """Makes database of human input archives."""
     st.subheader("Archives")
     # Filter out auto-scraping
-    data = data[data["is_human"] == True][["url_alias", "genre", "scrape_at"]]
+    data = data[["url_alias", "genre", "scrape_at"]]
 
     st.dataframe(data)
 
